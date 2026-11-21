@@ -209,7 +209,7 @@ const THEMES=[
    {at:950,en:[{k:'ninja',s:'R',d:0},{k:'ninja',s:'L',d:10},{k:'kungfu',s:'D',d:80},{k:'chain',s:'L',d:140},{k:'gun',s:'D',d:220},{k:'woman',s:'R',d:300}]},
    {at:1500,en:[{k:'brute',s:'R',d:0,name:'ドーザ',hp:150},{k:'gun',s:'D',d:60},{k:'sumo',s:'L',d:150},{k:'ninja',s:'D',d:260},{k:'woman',s:'R',d:330},{k:'gun',s:'L',d:400}]},
    {at:2080,en:[{k:'rival',s:'D',d:80}]},
-   {at:2080,en:[{k:'grave',s:'R',d:110},{k:'ninja',s:'D',d:700},{k:'gun',s:'R',d:1100}]}
+   {at:2080,en:[{k:'grave',s:'R',d:110}]}
   ],
   weapons:[[300,160,'pipe'],[1200,150,'knife'],[1600,165,'nunchaku']],
   barrels:[[380,160,'apple'],[820,140,'apple'],[1300,165,'one'],[1450,150,'apple'],[1950,160,'apple'],[2060,145,'apple'],[2250,150,'meat']]}
@@ -1240,6 +1240,7 @@ function updGiant(e){
   if(e.T.mech){if(e.t%7===0&&e.t<110){boom(e.x+(Math.random()-.5)*60,e.y-20-Math.random()*90,Math.random()<.4);snd('boom');shake=Math.max(shake,4)}if(e.t===112){for(let k=0;k<6;k++)boom(e.x+(Math.random()-.5)*70,e.y-10-Math.random()*100,true);flashT=8;shake=10;snd('boom')}}
   if(e.t>=150)e.remove=true;
   return}
+ if(e.type==='grave'){const n=ents.filter(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o)).length;if(n<2){e.guardT=(e.guardT||0)+1;if(e.guardT>=(e.guarded?70:20)){e.guardT=0;e.guarded=true;const o=spawnEnemy({k:'gun',s:(e.guardSide=!e.guardSide)?'L':'R'});o.cool=40}}else e.guardT=0}
  if(e.st==='stagger'){e.t++;e.z=0;if(e.hooked){e.hooked=false;if(p.heldBy===e){releasePlayer();p.z=0}}if(e.holding){e.holding=false;if(p.heldBy===e){releasePlayer();p.z=0}}if(e.t>=48){e.st='idle';e.t=0;e.cool=24}return}
  if(e.st==='wind'){e.t++;e.glow=(e.t%8<3)?1:0;e.aiming=(e.move==='mg'||e.move==='burst');
   if(e.t>=e.wdur){e.st='atk';e.t=0;e.hitDone=false;e.glow=0;e.aiming=false;startMove(e)}
