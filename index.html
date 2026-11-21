@@ -614,8 +614,8 @@ function snd(n){if(!AC)return;try{if(mDuck&&n!=='lift'){const g=mDuck.gain,t=AC.
  case 'thunder':noise(1.4,260,.45);tone('sine',70,28,1.2,.3);break;
  case 'lift':tone('sine',55,50,.5,.05);break;
  case 'stab':noise(.04,5000,.3,'highpass');tone('sawtooth',1100,180,.07,.07);tone('sine',200,70,.1,.22);setTimeout(()=>{try{noise(.08,900,.12,'bandpass')}catch(e){}},30);break;
- case 'clang':[523,1307,1979,2797].forEach((f,i)=>tone(i?'sine':'square',f,f*.995,.45-i*.06,.07-i*.012));noise(.03,6000,.3,'highpass');tone('sine',160,60,.1,.2);break;
- case 'whack':noise(.05,1600,.4,'bandpass');tone('triangle',420,140,.07,.16);setTimeout(()=>{try{noise(.04,2200,.25,'bandpass');tone('triangle',520,200,.05,.08)}catch(e){}},45);break;
+ case 'clang':noise(.025,4500,.4,'highpass');noise(.06,2600,.25,'bandpass');tone('square',1180,1110,.6,.075);tone('triangle',2360,2220,.42,.04);tone('sine',590,560,.55,.06);break;
+ case 'whack':noise(.12,700,.55);tone('sine',170,48,.17,.38);tone('triangle',260,90,.1,.2);setTimeout(()=>{try{noise(.07,900,.32);tone('sine',130,52,.12,.22)}catch(e){}},45);break;
  case 'nosp':tone('square',160,110,.14,.08);break;
  case 'door':tone('square',180,120,.12,.05);noise(.15,600,.2);break;
  case 'oneup':[1047,1319,1568,2093].forEach((f,i)=>setTimeout(()=>{try{tone('square',f,f,.09,.07)}catch(e){}},i*70));break;
