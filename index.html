@@ -979,9 +979,10 @@ function renderMovie(){
 
 /* ===== 判定 ===== */
 function isGiant(e){return !!(e.T&&e.T.giant)}
+function hoff(e){return 13+(isGiant(e)?10:0)}
 function isBoss(e){return !!(e.T&&(e.T.giant||e.T.rival))}
 function inBox(a,b,x0,x1,dyT){const dx=(b.x-a.x)*a.face;return dx>=x0&&dx<=x1&&Math.abs(b.y-a.y)<=dyT&&b.z<24}
-function vulnerable(e){if(e.type==='bike')return !e.dead;if(isGiant(e))return !e.dead;return !e.dead&&e.inv<=0&&!['air','down','getup','dying','thrown','grabbed','emerge','perch','drop'].includes(e.st)}
+function vulnerable(e){if(e.type==='bike')return !e.dead;if(isGiant(e))return !e.dead&&!['down','getup','thrown','grabbed'].includes(e.st);return !e.dead&&e.inv<=0&&!['air','down','getup','dying','thrown','grabbed','emerge','perch','drop'].includes(e.st)}
 function tokens(){let n=0;for(const e of ents)if(e.kind==='enemy'&&e.token&&!e.dead)n++;return n}
 function updDoors(){if(S&&S.doors)for(const d of S.doors)if(d.open>0)d.open--}
 function spark(x,y,big){parts.push({t:'spark',x,y,life:big?10:7,max:big?10:7,big})}
@@ -1092,8 +1093,8 @@ function updJump(){const p=P;p.t++;
 function checkAutoGrab(mx){
  const p=P;if(!mx){p.grabT=0;return}
  let best=null;
- for(const e of ents){if(e.kind!=='enemy'||!vulnerable(e)||isGiant(e)||e.type==='bike')continue;if(!['idle','walk','hurt'].includes(e.st))continue;
-  const dx=(e.x-p.x)*p.face;if(dx>=3&&dx<=20&&Math.abs(e.y-p.y)<=5){best=e;break}}
+ for(const e of ents){if(e.kind!=='enemy'||!vulnerable(e)||(e.T&&e.T.mech)||e.type==='bike')continue;if(!['idle','walk','hurt','rec'].includes(e.st))continue;if(e.st==='rec'&&!isGiant(e))continue;
+  const dx=(e.x-p.x)*p.face,gr=isGiant(e)?e.T.rad+6:0;if(dx>=3&&dx<=20+gr&&Math.abs(e.y-p.y)<=5+(gr?3:0)){best=e;break}}
  if(!best){p.grabT=0;return}
  p.grabT++;
  if(p.grabT>=3){p.grabT=0;p.st='grab';p.t=0;p.gt=0;p.gcount=0;p.held=best;best.st='grabbed';best.t=0;best.token=false;best.aiming=false;best.lifted=false;snd('hit');
@@ -1102,38 +1103,41 @@ function checkAutoGrab(mx){
 function updGrab(mx,my){
  const p=P,e=p.held;p.t++;p.gt++;
  if(!e||e.st!=='grabbed'){p.held=null;p.st='idle';p.t=0;return}
- e.x=p.x+p.face*13;e.y=p.y;e.z=0;e.face=-p.face;
+ e.x=p.x+p.face*hoff(e);e.y=p.y;e.z=0;e.face=-p.face;
  const lever=mx||my;
  if(PR.p){
   if(mx&&mx!==p.face){p.st='throwK';p.t=0;e.lifted=true;snd('whiff')}
   else if(lever){p.tdir=p.face;p.st='throwP';p.t=0;e.lifted=true;snd('whiff')}
   else{p.st='knee';p.t=0}
   return}
+ if(isGiant(e)&&p.gt>=50){p.held=null;e.st='idle';e.t=0;e.cool=20;shake=3;snd('heavy');knockP(e.face,1.8,2);return}
  if(p.gt>=110){p.held=null;e.st='hurt';e.t=0;e.stun=10;e.vx=p.face*1.5;p.st='hurt';p.t=6;p.vx=-p.face*1.2}
 }
 function updStrike(){
  const p=P,e=p.held;p.t++;
- if(e&&e.st==='grabbed'){e.x=p.x+p.face*13;e.y=p.y}
+ if(e&&e.st==='grabbed'){e.x=p.x+p.face*hoff(e);e.y=p.y}
  if(p.t===4&&e&&e.st==='grabbed'){
   e.hp-=5;e.flash=5;score+=50;setEnemyHud(e);spark(e.x-p.face*3,e.y-20,0);hitstop=3;snd('hit');p.gcount++;
-  if(e.hp<=0||p.gcount>=3){p.held=null;if(e.hp<=0)killEnemy(e);knock(e,p.face,1.8,2.4);snd('heavy')}
+  if(isGiant(e)){if(e.hp<=0){p.held=null;giantDie(e)}else if(p.gcount>=3){p.held=null;e.st='hurt';e.t=0;e.stun=24;e.vx=p.face*1.2;snd('heavy')}}
+  else if(e.hp<=0||p.gcount>=3){p.held=null;if(e.hp<=0)killEnemy(e);knock(e,p.face,1.8,2.4);snd('heavy')}
  }
  if(p.t>=12){if(p.held){p.st='grab';p.t=0}else{p.st='idle';p.t=0}}
 }
 function updThrowP(){
  const p=P,e=p.held;p.t++;
- if(e){if(p.t<10){const u=p.t/10;e.x=p.x+p.face*(13-u*8);e.z=u*30;e.y=p.y}
+ if(e){if(p.t<10){const u=p.t/10;e.x=p.x+p.face*(hoff(e)-u*8);e.z=u*30;e.y=p.y}
   if(p.t===10){e.lifted=false;e.st='thrown';e.t=0;e.vx=p.face*3.2;e.vz=1.4;e.z=32;e.hp-=18;e.flash=4;e.face=-p.face;score+=180;setEnemyHud(e);snd('whiff');p.held=null}}
  if(p.t>=24){p.st='idle';p.t=0}
 }
 function updThrowK(){
  const p=P,e=p.held;p.t++;
  if(e){
-  if(p.t<14){const a=p.t/14*Math.PI;e.x=p.x+p.face*13*Math.cos(a);e.z=Math.sin(a)*34+2;e.y=p.y;e.face=-p.face}
+  if(p.t<14){const a=p.t/14*Math.PI;e.x=p.x+p.face*hoff(e)*Math.cos(a);e.z=Math.sin(a)*34+2;e.y=p.y;e.face=-p.face}
   if(p.t===14){
    e.lifted=false;e.z=0;e.x=p.x-p.face*16;e.hp-=26;e.flash=6;setEnemyHud(e);score+=260;p.held=null;shake=7;hitstop=8;snd('heavy');dust(e.x,e.y);spark(e.x,e.y-6,1);
-   if(e.hp<=0)killEnemy(e);
-   e.st='down';e.t=0;e.vx=0;
+   if(isGiant(e)){if(e.hp<=0)giantDie(e);else{e.st='down';e.t=0;e.vx=0}}
+   else{if(e.hp<=0)killEnemy(e);
+   e.st='down';e.t=0;e.vx=0;}
    for(const o of ents)if(o!==e&&o.kind==='enemy'&&vulnerable(o)&&Math.abs(o.x-e.x)<34&&Math.abs(o.y-e.y)<12)hurtEnemy(o,10,'heavy',o.x>=e.x?1:-1,0);
   }}
  if(p.t>=30){p.st='idle';p.t=0}
@@ -1241,6 +1245,11 @@ function updGiant(e){
   if(e.t>=150)e.remove=true;
   return}
  if(e.type==='grave'){const n=ents.filter(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o)).length;if(n<2){e.guardT=(e.guardT||0)+1;if(e.guardT>=(e.guarded?70:20)){e.guardT=0;e.guarded=true;const o=spawnEnemy({k:'gun',s:(e.guardSide=!e.guardSide)?'L':'R'});o.cool=40}}else e.guardT=0}
+ if(e.st==='grabbed')return;
+ if(e.st==='thrown'){e.t++;e.x+=e.vx;e.z+=e.vz;e.vz-=.18;e.x=clamp(e.x,cam+14,cam+W-14);if(e.z<=0){e.z=0;e.vx=0;shake=7;hitstop=6;snd('heavy');snd('thud');dust(e.x,e.y);if(e.hp<=0){giantDie(e);return}e.st='down';e.t=0}return}
+ if(e.st==='down'){e.t++;if(e.t>=50){e.st='getup';e.t=0}return}
+ if(e.st==='getup'){e.t++;if(e.t>=20){e.st='idle';e.t=0;e.cool=30}return}
+ if(e.st==='hurt'){e.t++;e.x+=e.vx||0;e.vx=(e.vx||0)*.85;if(e.t>=(e.stun||12)){e.st='idle';e.t=0;e.cool=20}return}
  if(e.st==='stagger'){e.t++;e.z=0;if(e.hooked){e.hooked=false;if(p.heldBy===e){releasePlayer();p.z=0}}if(e.holding){e.holding=false;if(p.heldBy===e){releasePlayer();p.z=0}}if(e.t>=48){e.st='idle';e.t=0;e.cool=24}return}
  if(e.st==='wind'){e.t++;e.glow=(e.t%8<3)?1:0;e.aiming=(e.move==='mg'||e.move==='burst');
   if(e.t>=e.wdur){e.st='atk';e.t=0;e.hitDone=false;e.glow=0;e.aiming=false;startMove(e)}
@@ -1782,7 +1791,10 @@ function frameOf(e){
    case 'drop':return 'jump';
    case 'atk':if(e.move==='hook')return e.hooked?'grab':'straight';if(e.move==='grab')return e.holding?'throw':'grab';if(e.move==='press'||e.move==='retreat')return e.z>0?'jump':'crouch';return {pound:'smash',drum:'swing',rush:'charge',chainsweep:'swing',call:'raise',mg:'aim',burst:'aim',swing:'smash'}[e.move]||'idle0';
    case 'rec':return((e.move==='swing'||e.move==='pound')&&t<10)?'smash':'idle0';
-   case 'stagger':return 'hurt';
+   case 'stagger':case 'hurt':return 'hurt';
+   case 'grabbed':return e.lifted?'down':'hurt';
+   case 'thrown':case 'down':return 'down';
+   case 'getup':return 'crouch';
    case 'dying':return t<30?'hurt':'down';
    default:return 'idle0';
   }
