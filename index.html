@@ -38,7 +38,7 @@ html,body{margin:0;height:100%;background:#0b0710;color:#fff;font-family:'DotGot
 .story p{margin:.45em 0;opacity:0;animation:fi .7s forwards}
 .scene{image-rendering:pixelated;width:min(70vw,52vh);margin-bottom:.6em;border:2px solid #3a2a4a}
 .endimg{width:min(92vw,62vh);border-color:#e8a060}
-#screen{overflow-y:auto;justify-content:safe center}
+#screen{overflow-y:auto;justify-content:safe center;touch-action:pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}#screen *{touch-action:pan-y}
 #cap{position:absolute;left:0;right:0;bottom:1.2%;text-align:center;pointer-events:none;display:none;font-size:calc(var(--u)*3.1);color:#fff;text-shadow:2px 2px 0 #000;padding:0 4%;line-height:1.3}#cap span{animation:capin .5s}@keyframes capin{from{opacity:0}to{opacity:1}}
 #skipm{position:absolute;right:2%;top:1.5%;font-size:calc(var(--u)*2);color:#c8c0e0;pointer-events:none;display:none}
 .menu{margin:.7em 0 .9em;display:flex;flex-direction:column;gap:.35em;align-items:center}.mi{padding:.3em 1.2em;border:2px solid #5a4a7a;color:#e8e0f0;min-width:14em;box-sizing:border-box;cursor:pointer;background:#1a1028}.mi.on{border-color:#ffd23a;color:#ffd23a;background:#3a1a30}.mi.on::before{content:'▶ '}.note{color:#c8c0e0;font-size:.85em}
@@ -776,9 +776,13 @@ stick.addEventListener('pointerup',endStick);stick.addEventListener('pointercanc
 document.querySelectorAll('.b').forEach(b=>{const k=b.dataset.k;
  b.addEventListener('pointerdown',e=>{e.preventDefault();initAudio();try{b.setPointerCapture(e.pointerId)}catch(_){}touch[k]=1;latch[k]=1;b.classList.add('on')});
  const up=()=>{touch[k]=0;b.classList.remove('on')};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)});
-document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+document.addEventListener('touchmove',e=>{if(e.touches.length===1&&e.target.closest&&e.target.closest('#screen')&&scr.style.display!=='none')return;e.preventDefault()},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
-const scr=$('screen');scr.addEventListener('pointerdown',e=>{e.preventDefault();initAudio();const mi=e.target.closest&&e.target.closest('.mi');if(mi&&menuItems.length){menuSel=+mi.dataset.i;menuRefresh();if(screenT>10)menuAct();return}latch.start=1});
+const scr=$('screen');let scrDown=null;
+scr.addEventListener('pointerdown',e=>{initAudio();scrDown={x:e.clientX,y:e.clientY,st:scr.scrollTop,id:e.pointerId};if(!(mode==='title'||mode==='select')){e.preventDefault();latch.start=1}});
+scr.addEventListener('pointerup',e=>{if(!scrDown||!(mode==='title'||mode==='select'))return;const moved=Math.abs(e.clientX-scrDown.x)+Math.abs(e.clientY-scrDown.y)+Math.abs(scr.scrollTop-scrDown.st);scrDown=null;if(moved>10)return;
+ const mi=e.target.closest&&e.target.closest('.mi');if(mi&&menuItems.length){menuSel=+mi.dataset.i;menuRefresh();if(screenT>10)menuAct()}});
+scr.addEventListener('pointercancel',()=>{scrDown=null});
 let runMode='full',menuSel=0,menuItems=[];
 function menuHTML(items){menuItems=items;if(menuSel>=items.length)menuSel=0;return '<div class="menu">'+items.map((it,i)=>'<div class="mi'+(i===menuSel?' on':'')+'" data-i="'+i+'">'+it.label+'</div>').join('')+'</div>'}
 function menuRefresh(){scr.querySelectorAll('.mi').forEach((el,i)=>el.classList.toggle('on',i===menuSel))}
