@@ -1014,7 +1014,7 @@ function renderMovie(){
 
 /* ===== 判定 ===== */
 function isGiant(e){return !!(e.T&&e.T.giant)}
-const WEIGHT={woman:.75,ninja:.85,punk:1,knife:1,gun:1,kungfu:1,rider:1,rival:1,chain:1.1,brute:1.6,sumo:1.9};
+const WEIGHT={woman:.75,brute:1.6,sumo:1.9};
 function weightOf(e){return isGiant(e)?2.2:(WEIGHT[e.type]||1)}
 function hoff(e){return 13+(isGiant(e)?10:0)}
 function isBoss(e){return !!(e.T&&(e.T.giant||e.T.rival))}
