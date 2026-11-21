@@ -1014,6 +1014,8 @@ function renderMovie(){
 
 /* ===== 判定 ===== */
 function isGiant(e){return !!(e.T&&e.T.giant)}
+const WEIGHT={woman:.75,ninja:.85,punk:1,knife:1,gun:1,kungfu:1,rider:1,rival:1,chain:1.1,brute:1.6,sumo:1.9};
+function weightOf(e){return isGiant(e)?2.2:(WEIGHT[e.type]||1)}
 function hoff(e){return 13+(isGiant(e)?10:0)}
 function isBoss(e){return !!(e.T&&(e.T.giant||e.T.rival))}
 function inBox(a,b,x0,x1,dyT){const dx=(b.x-a.x)*a.face;return dx>=x0&&dx<=x1&&Math.abs(b.y-a.y)<=dyT&&b.z<24}
@@ -1106,7 +1108,7 @@ function playerDie(){
 
 /* ===== プレイヤー ===== */
 function nearWeapon(){for(const w of ents)if(w.kind==='weapon'&&!w.remove&&Math.abs(w.x-P.x)<14&&Math.abs(w.y-P.y)<8)return w;return null}
-function pickWeapon(w){w.remove=true;P.weapon={type:w.type,dur:w.dur||WPN[w.type].dur};P.st='pick';P.t=0;snd('pick');showMsg(WPN[w.type].name+'を拾った',70)}
+function pickWeapon(w){w.remove=true;if(P.weapon){const o=P.weapon;ents.push({kind:'weapon',type:o.type,dur:o.dur,x:clamp(P.x-P.face*14,cam+12,cam+W-12),y:P.y+2,z:0,t:0});P.weapon=null}P.weapon={type:w.type,dur:w.dur||WPN[w.type].dur};P.st='pick';P.t=0;snd('pick');showMsg(WPN[w.type].name+'を拾った',70)}
 function startWeaponAtk(){const p=P;p.st='watk';p.t=0;p.buf=0;snd('whiff')}
 function dropWeapon(){const p=P;if(!p||!p.weapon)return;ents.push({kind:'weapon',type:p.weapon.type,dur:p.weapon.dur,x:p.x+p.face*-6,y:p.y,z:0,t:0});p.weapon=null}
 function breakWeapon(){const p=P;for(let i=0;i<8;i++)parts.push({t:'deb',x:p.x+p.face*22,y:p.y,z:24,vx:(Math.random()-.5)*2.5,vz:1+Math.random()*2,col:rpick(['#c8ccd4','#8a8e98','#a8682a']),life:40});snd('break');showMsg(WPN[p.weapon.type].name+'が壊れた',70);p.weapon=null}
@@ -1163,7 +1165,7 @@ function updThrowP(){
  const p=P,e=p.held;p.t++;
  if(e){if(p.t<10){const u=p.t/10;e.x=p.x+p.face*(hoff(e)-u*8);e.z=u*30;e.y=p.y}
   if(p.t===10&&e.T&&e.T.rival){e.lifted=false;e.st='ukemi';e.t=0;e.vx=p.face*2.6;e.vz=2.4;e.z=30;e.inv=24;e.face=-p.face;p.held=null;snd('jump')}
-  else if(p.t===10){e.lifted=false;e.st='thrown';e.t=0;e.tHit=[];e.vx=p.face*3.2;e.vz=1.4;e.z=32;e.hp-=18;e.flash=4;e.face=-p.face;score+=180;setEnemyHud(e);snd('whiff');p.held=null}}
+  else if(p.t===10){e.lifted=false;e.st='thrown';e.t=0;e.tHit=[];e.vx=p.face*3.2/weightOf(e);e.vz=1.4;e.z=32;e.hp-=18;e.flash=4;e.face=-p.face;score+=180;setEnemyHud(e);snd('whiff');p.held=null}}
  if(p.t>=24){p.st='idle';p.t=0}
 }
 function updThrowK(){
@@ -1207,7 +1209,7 @@ function updPlayer(){
    if(clearT<=0){
     if((PR.j&&(PR.p||IN.p))||(PR.p&&IN.j)||PR.b)startBack();
     else if(PR.j)startJump(mx,my);
-    else if(PR.p){const w=p.weapon?null:nearWeapon();if(w)pickWeapon(w);else if(p.weapon)startWeaponAtk();else startPunch()}
+    else if(PR.p){const w=nearWeapon();if(w)pickWeapon(w);else if(p.weapon)startWeaponAtk();else startPunch()}
     else checkAutoGrab(mx,my);
    }
    break;
