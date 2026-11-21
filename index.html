@@ -1132,7 +1132,7 @@ function updThrowP(){
  const p=P,e=p.held;p.t++;
  if(e){if(p.t<10){const u=p.t/10;e.x=p.x+p.face*(hoff(e)-u*8);e.z=u*30;e.y=p.y}
   if(p.t===10&&e.T&&e.T.rival){e.lifted=false;e.st='ukemi';e.t=0;e.vx=p.face*2.6;e.vz=2.4;e.z=30;e.inv=24;e.face=-p.face;p.held=null;snd('jump')}
-  else if(p.t===10){e.lifted=false;e.st='thrown';e.t=0;e.vx=p.face*3.2;e.vz=1.4;e.z=32;e.hp-=18;e.flash=4;e.face=-p.face;score+=180;setEnemyHud(e);snd('whiff');p.held=null}}
+  else if(p.t===10){e.lifted=false;e.st='thrown';e.t=0;e.tHit=[];e.vx=p.face*3.2;e.vz=1.4;e.z=32;e.hp-=18;e.flash=4;e.face=-p.face;score+=180;setEnemyHud(e);snd('whiff');p.held=null}}
  if(p.t>=24){p.st='idle';p.t=0}
 }
 function updThrowK(){
@@ -1362,7 +1362,7 @@ function updEnemy(e){
   case 'nthrow':e.t++;if(e.t===10){fx.push({k:'shuriken',x:e.x+e.face*12,y:e.y,vx:e.face*4.2,t:0});snd('chain')}if(e.t>=26){e.st='rec';e.t=0}return;
   case 'air':case 'thrown':
    e.x+=e.vx;e.z+=e.vz;e.vz-=.18;
-   if(e.st==='thrown')for(const o of ents)if(o!==e&&o.kind==='enemy'&&vulnerable(o)&&Math.abs(o.x-e.x)<14+(o.T.rad||0)&&Math.abs(o.y-e.y)<9+(o.T.rad?6:0)&&e.z<40){hurtEnemy(o,12,'heavy',Math.sign(e.vx)||1,0);if(isGiant(o))e.vx=-e.vx*.3}
+   if(e.st==='thrown')for(const o of ents)if(o!==e&&o.kind==='enemy'&&(e.tHit||(e.tHit=[])).length<3&&!e.tHit.some(h=>h.o===o&&frame-h.f<8)&&vulnerable(o)&&Math.abs(o.x-e.x)<14+(o.T.rad||0)&&Math.abs(o.y-e.y)<9+(o.T.rad?6:0)&&e.z<40){e.tHit.push({o,f:frame});hurtEnemy(o,12,'heavy',Math.sign(e.vx)||1,0);if(isGiant(o))e.vx=-e.vx*.3}
    if(e.z<=0){e.z=0;
     if(e.st==='thrown'){shake=5;snd('heavy');dust(e.x,e.y);if(e.hp<=0)killEnemy(e);e.st='down';e.t=0;e.vx=0}
     else if(!e.bounced&&e.vz<-1.5){e.vz=1.2;e.bounced=1;snd('thud');dust(e.x,e.y)}
