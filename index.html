@@ -233,6 +233,7 @@ const ETYPES={
  rival:{spr:'rival',hp:300,sp:1.3,pts:50000,rival:1,atk:{wind:0,act:0,rec:18,r0:0,range:24,dmg:6},names:['カイン']},
  grave:{spr:'grave',sc:1.5,hp:560,sp:.55,pts:60000,giant:1,rad:11,moves:['mg','burst','retreat','mg'],atk:{wind:16,act:8,rec:24,r0:0,range:44,dmg:14},names:['グレイヴ']}
 };
+const WTIP={knife:11,pipe:22,nunchaku:16};
 const WPN={knife:{dur:5,act:4,dur2:14,range:30,dmg:12,name:'ナイフ'},pipe:{dur:10,act:9,dur2:24,range:40,dmg:18,name:'鉄パイプ'},nunchaku:{dur:10,act:5,dur2:15,range:34,dmg:12,name:'ヌンチャク'}};
 
 const INTRO=['ネオンがにじむ夜の街。','暴力集団「デッドエンド団」が、この街の夜を支配していた。','ある晩、ジンの恋人ミカが、団員たちに連れ去られた。','警察はあてにならない。','ジンは拳を握りしめ、ひとり夜の街へ駆け出した。'];
@@ -1181,7 +1182,7 @@ function updPlayer(){
   case 'pick':p.t++;if(p.t>=8){p.st='idle';p.t=0}break;
   case 'wthrow':updWThrow();break;
   case 'watk':{p.t++;const w=p.weapon?WPN[p.weapon.type]:WPN.knife;
-   if(p.t===w.act&&p.weapon){if(playerAttack(4,w.range,10,w.dmg,'heavy',0)){p.weapon.dur--;if(p.weapon.dur<=0)breakWeapon()}}
+   if(p.t===w.act&&p.weapon){const wt=p.weapon.type,fr=SPR.sprites.hero[frameOf(p)],tip=(fr&&fr.hF?fr.hF[0]:17)+WTIP[wt];if(playerAttack(4,tip+7,12,w.dmg,'heavy',0)){p.weapon.dur--;if(p.weapon.dur<=0)breakWeapon()}}
    if(PR.p&&p.t>w.act+2)p.buf=1;
    if(p.t>=w.dur2){p.st='idle';p.t=0;if(p.buf){p.buf=0;if(p.weapon)startWeaponAtk()}}
    break}
