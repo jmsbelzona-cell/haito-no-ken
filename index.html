@@ -1126,14 +1126,16 @@ function updStrike(){
 function updThrowP(){
  const p=P,e=p.held;p.t++;
  if(e){if(p.t<10){const u=p.t/10;e.x=p.x+p.face*(hoff(e)-u*8);e.z=u*30;e.y=p.y}
-  if(p.t===10){e.lifted=false;e.st='thrown';e.t=0;e.vx=p.face*3.2;e.vz=1.4;e.z=32;e.hp-=18;e.flash=4;e.face=-p.face;score+=180;setEnemyHud(e);snd('whiff');p.held=null}}
+  if(p.t===10&&e.T&&e.T.rival){e.lifted=false;e.st='ukemi';e.t=0;e.vx=p.face*2.6;e.vz=2.4;e.z=30;e.inv=24;e.face=-p.face;p.held=null;snd('jump')}
+  else if(p.t===10){e.lifted=false;e.st='thrown';e.t=0;e.vx=p.face*3.2;e.vz=1.4;e.z=32;e.hp-=18;e.flash=4;e.face=-p.face;score+=180;setEnemyHud(e);snd('whiff');p.held=null}}
  if(p.t>=24){p.st='idle';p.t=0}
 }
 function updThrowK(){
  const p=P,e=p.held;p.t++;
  if(e){
   if(p.t<14){const a=p.t/14*Math.PI;e.x=p.x+p.face*hoff(e)*Math.cos(a);e.z=Math.sin(a)*34+2;e.y=p.y;e.face=-p.face}
-  if(p.t===14){
+  if(p.t===14&&e.T&&e.T.rival){e.lifted=false;e.z=22;e.x=p.x-p.face*16;e.st='ukemi';e.t=0;e.vx=-p.face*1.4;e.vz=2.2;e.inv=24;e.face=p.face;p.held=null;snd('jump')}
+  else if(p.t===14){
    e.lifted=false;e.z=0;e.x=p.x-p.face*16;e.hp-=26;e.flash=6;setEnemyHud(e);score+=260;p.held=null;shake=7;hitstop=8;snd('heavy');dust(e.x,e.y);spark(e.x,e.y-6,1);
    if(isGiant(e)){if(e.hp<=0)giantDie(e);else{e.st='down';e.t=0;e.vx=0}}
    else{if(e.hp<=0)killEnemy(e);
@@ -1445,6 +1447,7 @@ function rivalStep(e){
    if(e.t%6===2&&!e.hitDone&&Math.abs(p.x-e.x)<36&&Math.abs(p.y-e.y)<10&&p.z<30){if(enemyHitsPlayer({face:p.x>=e.x?1:-1},9,true))e.hitDone=true}
    if(e.t>=30){e.st='rr';e.t=0;e.inv=10}return true;
   case 'rb':e.t++;e.x-=e.face*2.6;e.z=Math.max(0,Math.sin(e.t/12*Math.PI)*6);if(e.t>=12){e.z=0;e.st='idle';e.t=0;e.cool=12}clampE(e);return true;
+  case 'ukemi':e.t++;e.x+=e.vx;e.z+=e.vz;e.vz-=.2;if(e.z<=0&&e.t>3){e.z=0;e.vx=0;e.st='rr';e.t=12;dust(e.x,e.y);e.face=p.x>=e.x?1:-1}clampE(e);return true;
   case 'rr':e.t++;if(e.t>=18){e.st='idle';e.t=0;e.cool=20+Math.random()*40}return true;
   case 'idle':case 'walk':break;
   default:return false;
@@ -1805,6 +1808,7 @@ function frameOf(e){
    case 'rc':{const k=e.ck;if(k===3)return t<6?'sobatprep':(t<=18?'sobat':'idle0');return(t>=2&&t<=(k===2?12:9))?['jab','straight','upper'][k]:'idle0'}
    case 'rj':case 'drop':return e.st==='rj'&&e.t<26?'jkick':'jump';
    case 'rs':return (t>>2)&1?'spin1':'spin0';
+   case 'ukemi':return e.z>6?((t>>2)&1?'spin0':'jump'):'crouch';
    case 'rb':return 'jump';
    case 'rr':case 'getup':return st==='getup'?'crouch':'idle0';
    case 'hurt':return 'hurt';
