@@ -24,6 +24,13 @@ html,body{margin:0;height:100%;background:#0b0710;color:#fff;font-family:'DotGot
 #screen{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,4,14,.86);text-align:center;padding:4vh 6vw;box-sizing:border-box;font-size:clamp(14px,min(4.2vw,3.6vh),22px);line-height:1.75}
 .title{font-size:clamp(44px,min(15vw,16vh),110px);color:#ffd23a;letter-spacing:.08em;line-height:1.1;text-shadow:.06em .06em 0 #c8302a,.12em .12em 0 #3a0e14}
 .sub{color:#f3c9a0;margin:.4em 0 1em}
+.hg{display:grid;grid-template-columns:repeat(auto-fit,minmax(10em,1fr));gap:.5em;width:100%;max-width:62em;margin-top:.4em}
+.hc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:.45em .5em .5em;display:flex;flex-direction:column;align-items:center;gap:.25em}
+.hc.wide{grid-column:1/-1}.ht{color:#ffd23a;font-size:.85em}.hs{image-rendering:pixelated;display:block}.hrow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.1em}.ha{color:#ffd23a;font-size:.7em}
+.hh{font-size:.8em;line-height:1.9;color:#fff}.hn{font-size:.68em;color:#c8c0e0;line-height:1.35}.hl{color:#c8c0e0;font-size:.85em;margin-right:.3em}.hp{color:#ffd23a;margin:0 .2em}.hd{font-size:.8em;color:#c8c0e0;margin-left:.3em}
+.hk{display:inline-block;min-width:1.4em;padding:0 .35em;border:1px solid #c8c0e0;border-bottom-width:3px;border-radius:4px;background:#2a2238;color:#fff;font-size:.9em;line-height:1.4;margin:0 .1em}
+.hb{display:inline-block;padding:0 .5em;border-radius:1em;color:#fff;font-size:.85em;line-height:1.5;border:2px solid rgba(255,255,255,.8);margin:0 .1em;text-shadow:1px 1px 0 #000}.hb.bp{background:#b8302a}.hb.bj{background:#2a8a4a}.hb.bs{background:#c89a1a}.hb.bl{background:#4a4a5a}
+.htip{font-size:.72em;color:#c8c0e0;margin-top:.5em}
 .help{font-size:.78em;color:#d9d2e6;max-width:36em}
 .help p{margin:.2em 0}
 .warn{color:#ffb070}
@@ -804,8 +811,8 @@ function saveHi(){if(runMode==='select')return;if(score>hiScore){hiScore=score;t
 const hiEl=$('hi'),tallyEl=$('tally'),pauseBtn=$('pausebtn');
 const hud=$('hud'),php=$('php'),lv=$('lv'),scEl=$('sc'),enEl=$('en'),enm=$('enm'),ehp=$('ehp'),msgEl=$('msg');
 function showMsg(t,d){msgEl.textContent=t;msgEl.style.fontSize='calc(var(--u)*'+Math.min(5.2,86/t.length).toFixed(2)+')';msgEl.classList.add('on');msgT=d||150}
-function showScreen(html){scr.innerHTML=html;scr.style.display='flex';screenT=0}
-function hideScreen(){scr.style.display='none'}
+function showScreen(html){scr.innerHTML=html;scr.style.display='flex';screenT=0;pad.style.visibility='hidden'}
+function hideScreen(){scr.style.display='none';pad.style.visibility=''}
 function newPlayer(){return{kind:'hero',spr:'hero',pal:HEROPAL,sc:1,x:cam+50,y:150,z:0,vx:0,vy:0,vz:0,face:1,st:'idle',t:0,hp:100,max:100,inv:90,flash:0,pk:0,comboT:0,landed:false,buf:0,held:null,heldBy:null,esc:0,hitSet:null,bounced:0,grabT:0,gt:0,gcount:0,jatk:null,jt:0,jhit:false,weapon:null,T:{}}}
 function sceneImg(kind){
  const c=mk(120,60),x=c.getContext('2d');x.fillStyle=kind==='van'?'#141022':'#0e1426';x.fillRect(0,0,120,60);
@@ -843,14 +850,34 @@ function endingImg(){
  return c.toDataURL();
 }
 function titleHTML(){
- const help=isTouch?'<p>左のスティックで移動、右のボタンでパンチ・ジャンプ・必殺技</p>':'<p>移動：矢印キー　パンチ：Z　ジャンプ：X　必殺技：スペース</p>';
- return '<div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+'<div class="help">'+help+
-  '<p>パンチを当て続けると ジャブ→ストレート→アッパー→ソバット。ジャンプ中にパンチで飛び蹴り</p>'+
-  '<p>パンチとジャンプを同時押しで後ろ攻撃（キーボードはBでも可）</p>'+
-  '<p>敵に向かって歩くとつかむ。前＋パンチで背負い投げ、後ろ＋パンチでスープレックス、パンチだけで膝蹴り</p>'+
-  '<p>ナイフ・鉄パイプ・ヌンチャクは近くでパンチを押すと拾える。武器で殴った敵は一撃で倒れる。武器を持っている時は必殺ボタンで投げる</p>'+
-  '<p>バイクはジャンプキックで叩き落とせ。銃や手裏剣は列をずらしてかわせ</p>'+
-  '<p class="warn">必殺技は無敵の回転攻撃。囲まれた時やつかまれた時の脱出に使えるが、体力を10%消費する。体力が10%以下だと出せない</p></div>';
+ return '<div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
+}
+/* ===== タイトルの図解 ===== */
+const HELPIMG={};
+function scene(key,items,w,h){if(HELPIMG[key])return HELPIMG[key];const c=mk(w,h),x=c.getContext('2d');x.imageSmoothingEnabled=false;
+ for(const it of items){const fr=SPR.sprites[it.spr][it.f];if(!fr)continue;const cv=frameCanvas(it.spr,it.pal,it.f,'');x.save();x.translate(it.x,h-3-(it.z||0));if(it.flip)x.scale(-1,1);x.drawImage(cv,fr.x,fr.y);x.restore();
+  if(it.z){x.globalAlpha=.3;pellipse(x,it.x,h-3,8,1,'#000000');x.globalAlpha=1}}
+ if(items.arrow){x.fillStyle='#ffd23a';const [ax,ay]=items.arrow;for(let i=0;i<4;i++)x.fillRect(ax+i,ay-3+i,1,7-2*i)}
+ return HELPIMG[key]=c.toDataURL()}
+function helpHTML(){
+ const H=HEROPAL,EP=makePal('punk',VARIANTS.punk[0]),hr=(f,x,o)=>Object.assign({spr:'hero',pal:H,f,x},o||{}),en=(f,x,o)=>Object.assign({spr:'punk',pal:EP,f,x,flip:1},o||{});
+ const T=isTouch,k=(s,c)=>T?'<span class="hb '+(c||'')+'">'+s+'</span>':'<span class="hk">'+s+'</span>';
+ const P=T?k('パンチ','bp'):k('Z'),J=T?k('ジャンプ','bj'):k('X'),SP=T?k('必殺','bs'):k('スペース'),MV=T?k('レバー','bl'):k('矢印キー'),FW=T?k('→','bl'):k('→'),BK=T?k('←','bl'):k('←');
+ const img=(key,items,w,h)=>'<img class="hs" style="width:'+Math.round(w*1.5)+'px;height:'+Math.round(h*1.5)+'px" src="'+scene(key,items,w,h)+'">';
+ const card=(title,pic,how,note,wide)=>'<div class="hc'+(wide?' wide':'')+'"><div class="ht">'+title+'</div>'+pic+'<div class="hh">'+how+'</div>'+(note?'<div class="hn">'+note+'</div>':'')+'</div>';
+ const combo=['jab','straight','upper','sobat'].map((f,i)=>img('c'+i,[hr(f,16)],46,52)).join('<span class="ha">▶</span>');
+ let h='<div class="hg">';
+ h+=card('移動',img('mv',[hr('walk1',22)],44,52),MV);
+ h+=card('必殺技',img('sp',[hr('spin0',22)],44,52),SP,'無敵の回転攻撃。囲まれた時やつかまれた時の脱出に。体力を10%使い、10%以下では出せない');
+ h+=card('連続技（4発目で倒す）','<div class="hrow">'+combo+'</div>',P+P+P+P,'当て続けると ジャブ→ストレート→アッパー→ソバット',1);
+ h+=card('飛び蹴り',img('jk',[hr('jump',14),hr('jkick',44,{z:12})],70,62),J+'<span class="hp">→</span>'+P,'バイクも叩き落とせる');
+ h+=card('後ろ攻撃',img('bk',[en('hurt',10,{flip:0}),hr('belbow',44)],64,52),P+'<span class="hp">＋</span>'+J+'<span class="hd">同時</span>'+(T?'':'<span class="hd">または</span>'+k('B')));
+ h+=card('つかむ',img('gr',[hr('grab',20),en('hurt',36)],60,52),'敵に向かって歩く');
+ h+=card('武器',img('wp',[hr('pick',16),hr('slash',48)],74,52),'<span class="hl">拾う</span>近くで'+P+'<br><span class="hl">投げる</span>'+SP,'ナイフ・鉄パイプ・ヌンチャク。殴った敵は一撃で倒れる');
+ h+=card('投げる（つかんだまま）','<div class="hrow">'+img('tp',[hr('throw',22)],46,52)+img('tk',[hr('suplex',24)],50,52)+img('kn',[hr('knee',20),en('hurt',35)],54,52)+'</div>',
+   '<span class="hl">背負い投げ</span>'+FW+'<span class="hp">＋</span>'+P+'<br><span class="hl">スープレックス</span>'+BK+'<span class="hp">＋</span>'+P+'<br><span class="hl">膝蹴り</span>'+P,'',1);
+ h+='</div><div class="htip">銃弾や手裏剣は、上下に列をずらしてかわせ</div>';
+ return h;
 }
 function toTitle(){mode='title';menuSel=0;cam=0;S=buildStage(0);ents=[];parts=[];fx=[];mika=null;P=newPlayer();P.x=120;P.y=152;P.inv=0;hud.style.display='none';showScreen(titleHTML());playMusic('title')}
 function story(lines,cb,img){mode='story';storyCb=cb;hud.style.display='none';playMusic('title');
