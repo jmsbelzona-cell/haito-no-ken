@@ -613,6 +613,9 @@ function snd(n){if(!AC)return;try{if(mDuck&&n!=='lift'){const g=mDuck.gain,t=AC.
  case 'mg':noise(.06,3000,.25,'bandpass');tone('square',300,90,.05,.05);break;
  case 'thunder':noise(1.4,260,.45);tone('sine',70,28,1.2,.3);break;
  case 'lift':tone('sine',55,50,.5,.05);break;
+ case 'stab':noise(.04,5000,.3,'highpass');tone('sawtooth',1100,180,.07,.07);tone('sine',200,70,.1,.22);setTimeout(()=>{try{noise(.08,900,.12,'bandpass')}catch(e){}},30);break;
+ case 'clang':[523,1307,1979,2797].forEach((f,i)=>tone(i?'sine':'square',f,f*.995,.45-i*.06,.07-i*.012));noise(.03,6000,.3,'highpass');tone('sine',160,60,.1,.2);break;
+ case 'whack':noise(.05,1600,.4,'bandpass');tone('triangle',420,140,.07,.16);setTimeout(()=>{try{noise(.04,2200,.25,'bandpass');tone('triangle',520,200,.05,.08)}catch(e){}},45);break;
  case 'nosp':tone('square',160,110,.14,.08);break;
  case 'door':tone('square',180,120,.12,.05);noise(.15,600,.2);break;
  case 'oneup':[1047,1319,1568,2093].forEach((f,i)=>setTimeout(()=>{try{tone('square',f,f,.09,.07)}catch(e){}},i*70));break;
@@ -1003,12 +1006,13 @@ function dismount(e,dir){
  fx.push({k:'wreck',x:e.x,y:e.y,vx:e.vx*.5,t:0,face:e.face});
  const r=spawnEnemy({k:'rider',s:'R'});r.x=e.x;r.y=e.y;knock(r,dir,1.6,2.6);
 }
+let hitSnd=null;const WSND={knife:'stab',pipe:'clang',nunchaku:'whack'};
 function hurtEnemy(e,dmg,kind,dir,kb){
  if(e.type==='bike'){dismount(e,dir);hitstop=5;spark(e.x,e.y-26,true);snd('heavy');return}
  if(isGiant(e)){
   if(e.dead)return;
   e.hp-=dmg;e.flash=3;score+=dmg*10;setEnemyHud(e);
-  const heavy=kind==='heavy';spark(P.x+P.face*16,P.y-P.z-26,heavy);hitstop=heavy?5:2;shake=heavy?3:1;snd(heavy?'heavy':'hit');
+  const heavy=kind==='heavy';spark(P.x+P.face*16,P.y-P.z-26,heavy);hitstop=heavy?5:2;shake=heavy?3:1;snd(hitSnd||(heavy?'heavy':'hit'));
   if(e.hp<=0){giantDie(e);return}
   e.stg+=dmg;if(e.stg>=70&&e.st!=='stagger'){e.stg=0;e.st='stagger';e.t=0;e.glow=0}
   return;
@@ -1017,7 +1021,7 @@ function hurtEnemy(e,dmg,kind,dir,kb){
  if(e.T.rival){e.hits=(e.hits||0)+1;e.hitT=120}
  e.hp-=dmg;e.flash=5;score+=dmg*10;setEnemyHud(e);e.token=false;e.cool=Math.max(e.cool,30);e.dash=false;e.glow=0;e.aiming=false;
  const heavy=kind==='heavy'||e.hp<=0||e.z>2,s=e.sc||1;
- spark(e.x-dir*4,e.y-28*s,heavy);hitstop=heavy?6:3;shake=heavy?4:2;snd(heavy?'heavy':'hit');
+ spark(e.x-dir*4,e.y-28*s,heavy);hitstop=heavy?6:3;shake=heavy?4:2;snd(hitSnd||(heavy?'heavy':'hit'));
  if(e.hp<=0){killEnemy(e);knock(e,dir,2,2.8);if(e.T.rival){hitstop=20;flashT=5;for(const o of ents)if(o!==e&&o.kind==='enemy'&&!o.dead&&!isGiant(o)){killEnemy(o);knock(o,o.x>=e.x?1:-1,2,2.8)}}return}
  if(heavy){knock(e,dir,1.6,2.4);return}
  e.st='hurt';e.t=0;e.vx=dir*kb;e.face=-dir;e.stun=kind==='kick'?20:15;
@@ -1182,7 +1186,7 @@ function updPlayer(){
   case 'pick':p.t++;if(p.t>=8){p.st='idle';p.t=0}break;
   case 'wthrow':updWThrow();break;
   case 'watk':{p.t++;const w=p.weapon?WPN[p.weapon.type]:WPN.knife;
-   if(p.t===w.act&&p.weapon){const wt=p.weapon.type,fr=SPR.sprites.hero[frameOf(p)],tip=(fr&&fr.hF?fr.hF[0]:17)+WTIP[wt];if(playerAttack(4,tip+7,12,w.dmg,'heavy',0)){p.weapon.dur--;if(p.weapon.dur<=0)breakWeapon()}}
+   if(p.t===w.act&&p.weapon){const wt=p.weapon.type,fr=SPR.sprites.hero[frameOf(p)],tip=(fr&&fr.hF?fr.hF[0]:17)+WTIP[wt];hitSnd=WSND[wt];const wh=playerAttack(4,tip+7,12,w.dmg,'heavy',0);hitSnd=null;if(wh){p.weapon.dur--;if(p.weapon.dur<=0)breakWeapon()}}
    if(PR.p&&p.t>w.act+2)p.buf=1;
    if(p.t>=w.dur2){p.st='idle';p.t=0;if(p.buf){p.buf=0;if(p.weapon)startWeaponAtk()}}
    break}
@@ -1632,7 +1636,7 @@ function updFx(){
    f.x+=f.vx;f.z+=f.vz;f.vz-=.03;if(f.z<8)f.z=8;
    let hit=false;
    for(const e of ents){
-    if(e.kind==='enemy'&&vulnerable(e)){const rad=e.T.rad||0;if(Math.abs(e.x-f.x)<10+rad&&Math.abs(e.y-f.y)<8+(rad?4:0)&&e.z<24){hurtEnemy(e,{knife:16,pipe:20,nunchaku:14}[f.type],'heavy',Math.sign(f.vx),0);hit=true;break}}
+    if(e.kind==='enemy'&&vulnerable(e)){const rad=e.T.rad||0;if(Math.abs(e.x-f.x)<10+rad&&Math.abs(e.y-f.y)<8+(rad?4:0)&&e.z<24){hitSnd=WSND[f.type];hurtEnemy(e,{knife:16,pipe:20,nunchaku:14}[f.type],'heavy',Math.sign(f.vx),0);hitSnd=null;hit=true;break}}
     else if(e.kind==='barrel'&&!e.remove&&Math.abs(e.x-f.x)<8&&Math.abs(e.y-f.y)<7){breakBarrel(e);hit=true;break}
    }
    const out=f.x<cam+4||f.x>cam+W-4;
