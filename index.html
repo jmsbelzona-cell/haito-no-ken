@@ -616,10 +616,12 @@ function initAudio(){
 }
 function noise(dur,fr,vol,type){const s=AC.createBufferSource();s.buffer=NB;const f=AC.createBiquadFilter();f.type=type||'lowpass';f.frequency.value=fr;const gn=AC.createGain(),t=AC.currentTime;gn.gain.setValueAtTime(vol,t);gn.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f);f.connect(gn);gn.connect(sfxBus);s.start(t);s.stop(t+dur)}
 function tone(type,f0,f1,dur,vol){const o=AC.createOscillator();o.type=type;const gn=AC.createGain(),t=AC.currentTime;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);gn.gain.setValueAtTime(vol,t);gn.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(gn);gn.connect(sfxBus);o.start(t);o.stop(t+dur)}
-function snd(n){if(!AC)return;try{if(mDuck&&n!=='lift'){const g=mDuck.gain,t=AC.currentTime;g.cancelScheduledValues(t);g.setValueAtTime(Math.min(g.value,MV),t);g.linearRampToValueAtTime(MV*.35,t+.01);g.linearRampToValueAtTime(MV,t+.35)}}catch(e){}if(SEBUF[n]){const tonal=n==='item'||n==='go'||n==='cursor'||n==='decide';playBuf(SEBUF[n],SEVOL[n]||.8,tonal?1:.96+Math.random()*.08);return}
+function snd(n){if(!AC)return;try{if(mDuck&&n!=='lift'){const g=mDuck.gain,t=AC.currentTime;g.cancelScheduledValues(t);g.setValueAtTime(Math.min(g.value,MV),t);g.linearRampToValueAtTime(MV*.35,t+.01);g.linearRampToValueAtTime(MV,t+.35)}}catch(e){}if(n==='bat'&&SEBUF.catch){playBuf(SEBUF.catch,1,.95+Math.random()*.1);return}
+ if(SEBUF[n]){const tonal=n==='item'||n==='go'||n==='cursor'||n==='decide';playBuf(SEBUF[n],SEVOL[n]||.8,tonal?1:.96+Math.random()*.08);return}
 try{switch(n){
  case 'whiff':case 'swingM':case 'swingH':noise(.06,3000,.07,'highpass');break;
  case 'catch':noise(.08,1200,.35);break;
+ case 'bat':noise(.2,550,.6);tone('sine',105,32,.3,.55);break;
  case 'fall':noise(.12,500,.4);tone('sine',90,40,.12,.3);break;
  case 'fire':noise(.3,600,.4);break;
  case 'glass':case 'drumS':noise(.12,1800,.4);break;
@@ -1062,7 +1064,7 @@ function dismount(e,dir){
  fx.push({k:'wreck',x:e.x,y:e.y,vx:e.vx*.5,t:0,face:e.face});
  const r=spawnEnemy({k:'rider',s:'R'});r.x=e.x;r.y=e.y;knock(r,dir,1.6,2.6);
 }
-let hitSnd=null;function hitSndOf(down){if(hitSnd==='punchH')return 'low';if(down&&(!hitSnd||hitSnd==='punch'))return 'low';return hitSnd||(down?'heavy':'hit')}const WSND={knife:'stab',pipe:'clang',nunchaku:'whack'};
+let hitSnd=null;function hitSndOf(down){if(hitSnd==='punchH')return 'low';if(down&&(!hitSnd||hitSnd==='punch'))return 'low';return hitSnd||(down?'heavy':'hit')}const WSND={knife:'stab',pipe:'bat',nunchaku:'bat'};
 function hurtEnemy(e,dmg,kind,dir,kb){
  if(e.type==='bike'){dismount(e,dir);hitstop=5;spark(e.x,e.y-40,true);snd('heavy');return}
  if(isGiant(e)){
@@ -1161,7 +1163,7 @@ function checkAutoGrab(mx,my){
   const dx=(e.x-p.x)*p.face,gr=isGiant(e)?e.T.rad+6:0;if(dx>=3&&dx<=24+gr&&Math.abs(e.y-p.y)<=8+(gr?3:0)){best=e;break}}
  if(!best){p.grabT=0;return}
  p.grabT++;
- if(p.grabT>=3){p.grabT=0;p.st='grab';p.t=0;p.gt=0;p.gcount=0;p.held=best;best.st='grabbed';best.t=0;best.token=false;best.aiming=false;best.lifted=false;snd('catch');
+ if(p.grabT>=3){p.grabT=0;p.st='grab';p.t=0;p.gt=0;p.gcount=0;p.held=best;best.st='grabbed';best.t=0;best.token=false;best.aiming=false;best.lifted=false;snd('hit');
   if(!grabHint){;grabHint=true}}
 }
 const ESC={hammer:{t:40,dmg:10,pose:'charge',lunge:1.2},bull:{t:40,dmg:12,pose:'smash',lunge:0},anchor:{t:40,dmg:12,pose:'swing',lunge:0},grave:{t:40,dmg:12,pose:'smash',lunge:.8,late:6},rival:{t:24,dmg:8,pose:'upper',lunge:.6}};
