@@ -1138,10 +1138,11 @@ function checkAutoGrab(mx,my){
  if(p.grabT>=3){p.grabT=0;p.st='grab';p.t=0;p.gt=0;p.gcount=0;p.held=best;best.st='grabbed';best.t=0;best.token=false;best.aiming=false;best.lifted=false;snd('hit');
   if(!grabHint){;grabHint=true}}
 }
-const ESC={hammer:{t:40,dmg:10,pose:'charge',lunge:1.2},bull:{t:40,dmg:12,pose:'smash',lunge:0},anchor:{t:40,dmg:12,pose:'swing',lunge:0},grave:{t:40,dmg:10,pose:'straight',lunge:.8},rival:{t:24,dmg:8,pose:'upper',lunge:.6}};
-function bossEscape(e){const p=P,c=ESC[e.type];p.held=null;e.lifted=false;e.st='esc';e.t=0;e.inv=20;e.face=p.x>=e.x?1:-1;e.vx=e.face*c.lunge;p.st='idle';p.t=0;
+const ESC={hammer:{t:40,dmg:10,pose:'charge',lunge:1.2},bull:{t:40,dmg:12,pose:'smash',lunge:0},anchor:{t:40,dmg:12,pose:'swing',lunge:0},grave:{t:40,dmg:12,pose:'smash',lunge:.8,late:6},rival:{t:24,dmg:8,pose:'upper',lunge:.6}};
+function bossEscape(e){const p=P,c=ESC[e.type];p.held=null;e.lifted=false;e.st='esc';e.t=0;e.face=p.x>=e.x?1:-1;e.vx=e.face*c.lunge;p.st='idle';p.t=0;
+ if(c.late){p.st='hurt';p.t=0;p.vx=0;p.face=-e.face;e.vx=0;snd('whiff');return}
  enemyHitsPlayer(e,c.dmg,true);shake=6;hitstop=6;snd('heavy');snd('whiff')}
-function updEsc(e){e.t++;e.x+=e.vx;e.vx*=.85;if(e.flash>0)e.flash--;clampE(e);if(e.t>=24){e.st=e.T.rival?'rr':'idle';e.t=e.T.rival?6:0;e.cool=30}}
+function updEsc(e){e.t++;const c=ESC[e.type];if(c.late&&e.t===c.late){e.vx=e.face*c.lunge;const p=P;if(Math.abs(p.x-e.x)<e.T.rad+34&&Math.abs(p.y-e.y)<12){enemyHitsPlayer(e,c.dmg,true);shake=7;hitstop=7;snd('clang');spark(p.x-e.face*4,p.y-p.z-30,1)}}e.x+=e.vx;e.vx*=.85;if(e.flash>0)e.flash--;clampE(e);if(e.t>=24){e.st=e.T.rival?'rr':'idle';e.t=e.T.rival?6:0;e.cool=30}}
 function updGrab(mx,my){
  const p=P,e=p.held;p.t++;p.gt++;
  if(!e||e.st!=='grabbed'){p.held=null;p.st='idle';p.t=0;return}
@@ -1841,7 +1842,7 @@ function frameOf(e){
    case 'rec':return((e.move==='swing'||e.move==='pound')&&t<10)?'smash':'idle0';
    case 'stagger':case 'hurt':return 'hurt';
    case 'grabbed':return e.lifted?'down':'hurt';
-   case 'esc':return t<16?ESC[e.type].pose:'idle0';
+   case 'esc':{const c=ESC[e.type];if(c.late)return t<c.late?'raise':(t<18?'smash':'idle0');return t<16?c.pose:'idle0'}
    case 'thrown':case 'down':return 'down';
    case 'getup':return 'crouch';
    case 'dying':return t<30?'hurt':'down';
@@ -1909,6 +1910,8 @@ function drawWeaponOverlay(e,fname,fr,sc){
  if(e.kind==='hero'&&e.weapon)w=e.weapon.type;
  else if(e.T&&e.T.wpn)w=e.T.wpn;
  if(e.type==='grave'&&fname==='aim')w='mg';
+ if(e.type==='grave'&&e.st==='esc'&&(fname==='raise'||fname==='smash')){const hx=fr.hF[0]*sc,hy=fr.hF[1]*sc;g.save();g.translate(hx,hy);g.rotate(fname==='raise'?-1.9:.4);if(fname==='smash')g.translate(14,0);
+  g.fillStyle='#0c0810';g.fillRect(-26,-5,36,7);g.fillStyle='#2a2a30';g.fillRect(-22,-4,22,3);g.fillStyle='#6a6a72';g.fillRect(-22,-4,22,1);g.fillStyle='#3a2a1a';g.fillRect(0,-4,9,5);g.fillStyle='#5a4028';g.fillRect(0,-4,9,1);pcircle(g,-8,2,4,'#0c0810');pcircle(g,-8,2,3,'#2a2a30');g.restore();return}
  if((e.type==='bull'||e.type==='anchor')&&(fname==='raise'||fname==='swing')&&(e.move==='chainsweep'))w='chain';
  if(e.type==='hammer'&&e.st==='wind'&&e.move==='drum'){const hx=fr.hF[0]*sc,hy=fr.hF[1]*sc;g.fillStyle='#0c0810';g.fillRect(hx-14,hy-24,26,22);g.fillStyle='#5a5e66';g.fillRect(hx-13,hy-23,24,20);g.fillStyle='#8a8e96';g.fillRect(hx-13,hy-23,4,20);g.fillStyle='#c8302a';g.fillRect(hx-13,hy-14,24,3);return}
  if(w==='sword'&&['jab','idle0','idle1','walk0','walk1','walk2','walk3','raise'].includes(fname)){const hx=fr.hF[0]*sc,hy=fr.hF[1]*sc;pline(g,hx,hy,fname==='jab'?hx+16:hx+3,fname==='jab'?hy:hy-13,'#0c0810',3);pline(g,hx+1,hy+1,fname==='jab'?hx+16:hx+3,fname==='jab'?hy:hy-12,'#d8dce4',1);return}
