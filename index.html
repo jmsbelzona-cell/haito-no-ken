@@ -787,8 +787,8 @@ document.querySelectorAll('.b').forEach(b=>{const k=b.dataset.k;
 document.addEventListener('touchmove',e=>{if(e.touches.length===1&&e.target.closest&&e.target.closest('#screen')&&scr.style.display!=='none')return;e.preventDefault()},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 const scr=$('screen');let scrDown=null;
-scr.addEventListener('pointerdown',e=>{initAudio();scrDown={x:e.clientX,y:e.clientY,st:scr.scrollTop,id:e.pointerId};if(!(mode==='title'||mode==='select')){e.preventDefault();latch.start=1}});
-scr.addEventListener('pointerup',e=>{if(!scrDown||!(mode==='title'||mode==='select'))return;const moved=Math.abs(e.clientX-scrDown.x)+Math.abs(e.clientY-scrDown.y)+Math.abs(scr.scrollTop-scrDown.st);scrDown=null;if(moved>10)return;
+scr.addEventListener('pointerdown',e=>{initAudio();scrDown={x:e.clientX,y:e.clientY,st:scr.scrollTop,id:e.pointerId};if(!(mode==='title'||mode==='select'||paused)){e.preventDefault();latch.start=1}});
+scr.addEventListener('pointerup',e=>{if(!scrDown||!(mode==='title'||mode==='select'||paused))return;const moved=Math.abs(e.clientX-scrDown.x)+Math.abs(e.clientY-scrDown.y)+Math.abs(scr.scrollTop-scrDown.st);scrDown=null;if(moved>10)return;
  const mi=e.target.closest&&e.target.closest('.mi');if(mi&&menuItems.length){menuSel=+mi.dataset.i;menuRefresh();if(screenT>10)menuAct()}});
 scr.addEventListener('pointercancel',()=>{scrDown=null});
 let runMode='full',menuSel=0,menuItems=[];
@@ -891,6 +891,7 @@ function helpHTML(){
  h+='</div><div class="htip">銃弾や手裏剣は、上下に列をずらしてかわせ</div>';
  return h;
 }
+function quitToTitle(){paused=false;hideScreen();if(AC)try{AC.resume()}catch(e){};msgT=0;msgEl.classList.remove('on');toTitle()}
 function toTitle(){mode='title';menuSel=0;cam=0;S=buildStage(0);ents=[];parts=[];fx=[];mika=null;P=newPlayer();P.x=120;P.y=152;P.inv=0;hud.style.display='none';showScreen(titleHTML());playMusic('title')}
 function story(lines,cb,img){mode='story';storyCb=cb;hud.style.display='none';playMusic('title');
  showScreen((img?'<img class="scene" src="'+sceneImg(img)+'">':'')+'<div class="story">'+lines.map((l,i)=>'<p style="animation-delay:'+(i*.55)+'s">'+l+'</p>').join('')+'</div><div class="blink">▶ タップで次へ</div>')}
@@ -1788,7 +1789,7 @@ function updParts(){
  if(S)for(const f of S.fires){const sx=f.x-cam;if(sx>-20&&sx<W+20&&Math.random()<.12)parts.push({t:'emb',x:f.x+3+Math.random()*6,y:f.y-20,vx:(Math.random()-.5)*.3,vy:-.3-Math.random()*.5,life:40+(Math.random()*40|0)})}
 }
 function togglePause(){
- if(!paused){paused=true;screenT=0;showScreen('<div class="big">一時停止中</div><div class="blink">タップで再開</div>');if(AC&&AC.state==='running')AC.suspend()}
+ if(!paused){paused=true;screenT=0;menuSel=0;showScreen('<div class="big">一時停止中</div>'+menuHTML([{label:'再開',act:togglePause},{label:'タイトルに戻る',act:quitToTitle}]));if(AC&&AC.state==='running')AC.suspend()}
  else{paused=false;hideScreen();if(AC)AC.resume()}
 }
 pauseBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();initAudio();if(mode==='play')latch.pause=1});
@@ -1796,8 +1797,8 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='pl
 function update(){
  frame++;readInput();
  if(msgT>0){msgT--;if(msgT===0)msgEl.classList.remove('on')}
- if(mode==='play'&&(PR.pause||(paused&&screenT>15&&(PR.start||PR.p||PR.j||PR.s)))){togglePause();return}
- if(paused){screenT++;return}
+ if(mode==='play'&&PR.pause){togglePause();return}
+ if(paused){screenT++;if(screenT>10&&menuItems.length){const n=menuItems.length;if(PR.u){menuSel=(menuSel+n-1)%n;menuRefresh();snd('jump')}if(PR.d){menuSel=(menuSel+1)%n;menuRefresh();snd('jump')}if(PR.start||PR.p||PR.j)menuAct()}return}
  if(mode==='movie'){movieUpd();if(mode==='movie'&&movieT>30&&(PR.start||PR.p||PR.j||PR.s))endMovie();return}
  if(mode!=='play'){
   screenT++;if(P&&mode!=='continue')P.t++;updParts();
