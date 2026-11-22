@@ -886,8 +886,8 @@ function helpHTML(){
  h+=card('後ろ攻撃',img('bk',[en('hurt',10,{flip:0}),hr('belbow',44)],64,52),P+'<span class="hp">＋</span>'+J+'<span class="hd">同時</span>'+(T?'':'<span class="hd">または</span>'+k('B')));
  h+=card('つかむ',img('gr',[hr('grab',20),en('hurt',36)],60,52),'敵に向かって歩く');
  h+=card('武器',img('wp',[hr('pick',16),hr('slash',48)],74,52),'<span class="hl">拾う</span>近くで'+P+'<br><span class="hl">投げる</span>'+SP,'ナイフ・鉄パイプ・ヌンチャク。殴った敵は一撃で倒れる');
- h+=card('投げる（つかんだまま）','<div class="hrow">'+img('tp',[hr('throw',22)],46,52)+img('tk',[hr('suplex',24)],50,52)+img('kn',[hr('knee',20),en('hurt',35)],54,52)+'</div>',
-   '<span class="hl">背負い投げ</span>'+FW+'<span class="hp">＋</span>'+P+'<br><span class="hl">スープレックス</span>'+BK+'<span class="hp">＋</span>'+P+'<br><span class="hl">膝蹴り</span>'+P,'',1);
+ h+=card('投げる（つかんだまま）','<div class="hrow">'+img('tp',[hr('throw',22)],46,52)+img('kn',[hr('knee',20),en('hurt',35)],54,52)+'</div>',
+   '<span class="hl">背負い投げ</span>'+FW+'<span class="hp">＋</span>'+P+'<br><span class="hl">後ろへ投げる</span>'+BK+'<span class="hp">＋</span>'+P+'<br><span class="hl">膝蹴り</span>'+P,'',1);
  h+='</div><div class="htip">銃弾や手裏剣は、上下に列をずらしてかわせ</div>';
  return h;
 }
@@ -1161,7 +1161,7 @@ function updGrab(mx,my){
  e.x=p.x+p.face*hoff(e);e.y=p.y;e.z=0;e.face=-p.face;
  const lever=mx||my;
  if(PR.p){
-  if(mx&&mx!==p.face){p.st='throwK';p.t=0;e.lifted=true;snd('whiff')}
+  if(mx&&mx!==p.face){p.face=-p.face;e.face=-p.face;e.x=p.x+p.face*hoff(e);p.tdir=p.face;p.st='throwP';p.t=0;e.lifted=true;snd('whiff')}
   else if(lever){p.tdir=p.face;p.st='throwP';p.t=0;e.lifted=true;snd('whiff')}
   else{p.st='knee';p.t=0}
   return}
