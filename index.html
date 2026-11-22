@@ -14,7 +14,7 @@ html,body{margin:0;height:100%;background:#0b0710;color:#fff;font-family:'DotGot
 #pl{position:absolute;left:2.5%;top:3%;width:36%}
 #en{position:absolute;right:2.5%;top:10%;width:30%;text-align:right;opacity:0;transition:opacity .2s}
 #wp{display:flex;align-items:center;gap:.3em;min-height:1.2em;line-height:1.2}#wp b{font-weight:normal}#wp .pips{display:flex;gap:1px}#wp .pips i{display:block;width:calc(var(--u)*1.1);height:calc(var(--u)*1.6);background:#ffd23a;box-shadow:1px 1px 0 #000}#wp .pips i.e{background:#3a3440}#wp .pips i.lo{background:#ff4a3a}
-.row{display:flex;justify-content:space-between;align-items:baseline;line-height:1.2}
+.row{display:flex;justify-content:space-between;align-items:baseline;line-height:1.2;gap:.4em}#estar{white-space:nowrap}
 .bar{height:calc(var(--u)*2.2);background:#3a0e14;border:calc(var(--u)*.45) solid #f3e6c4;box-shadow:0 0 0 1px #000;margin-top:calc(var(--u)*.6);position:relative}
 .bar i{position:absolute;left:0;top:0;bottom:0;background:#ffd23a;width:100%}
 #en .bar i{background:#ff7a3a;left:auto;right:0}#en .bar{margin-left:auto}#estar{color:#ffd23a;letter-spacing:.05em}
@@ -1038,23 +1038,23 @@ function popup(x,y,str){parts.push({t:'pop',x,y,str,life:50})}
 function setEnemyHud(e){lastEnemy=e;enemyHudT=150}
 function knock(e,dir,vx,vz){e.st='air';e.t=0;e.vx=dir*vx;e.vz=vz;e.face=-dir;e.bounced=0;e.token=false;e.lifted=false;e.aiming=false}
 function knockP(dir,vx,vz){const p=P;p.st='air';p.t=0;p.vx=dir*vx;p.vz=vz;p.face=-dir;p.bounced=0;dropWeapon()}
-function killEnemy(e){if(e.dead)return;e.hp=0;e.dead=true;score+=e.pts;popup(e.x,e.y-50*(e.sc||1),String(e.pts));if(e.deathMsg)showMsg(e.deathMsg,170);if(e.type==='knife')ents.push({kind:'weapon',type:'knife',x:e.x,y:e.y,z:0,t:0})}
+function killEnemy(e){if(e.dead)return;e.hp=0;e.dead=true;if(S&&e.type!=='bike')S.kills=(S.kills||0)+1;score+=e.pts;popup(e.x,e.y-64*(e.sc||1),String(e.pts));if(e.deathMsg)showMsg(e.deathMsg,170);if(e.type==='knife')ents.push({kind:'weapon',type:'knife',x:e.x,y:e.y,z:0,t:0})}
 function releaseHeld(){const p=P,h=p.held;if(!h)return;p.held=null;h.lifted=false;h.z=0;if(h.st==='grabbed'){h.st='hurt';h.t=0;h.stun=10;h.vx=0}}
 function releasePlayer(){const p=P,e=p.heldBy;p.heldBy=null;p.z=0;if(e&&e.st==='grab'){e.st='idle';e.t=0;e.cool=60;e.token=false}if(p.st==='held'){p.st='idle';p.t=0;p.inv=Math.max(p.inv,20)}p.esc=0}
 function dismount(e,dir){
  // bike crash: rider falls off
- e.dead=true;e.remove=true;snd('break');shake=4;score+=e.pts;popup(e.x,e.y-40,String(e.pts));
+ e.dead=true;e.remove=true;snd('break');shake=4;score+=e.pts;popup(e.x,e.y-52,String(e.pts));
  for(let i=0;i<10;i++)parts.push({t:'deb',x:e.x,y:e.y,z:10,vx:(Math.random()-.5)*4,vz:1+Math.random()*2.5,col:rpick(['#c8302a','#2a2a2e','#9aa4b4','#ffd23a']),life:50});
  fx.push({k:'wreck',x:e.x,y:e.y,vx:e.vx*.5,t:0,face:e.face});
  const r=spawnEnemy({k:'rider',s:'R'});r.x=e.x;r.y=e.y;knock(r,dir,1.6,2.6);
 }
 let hitSnd=null;const WSND={knife:'stab',pipe:'clang',nunchaku:'whack'};
 function hurtEnemy(e,dmg,kind,dir,kb){
- if(e.type==='bike'){dismount(e,dir);hitstop=5;spark(e.x,e.y-26,true);snd('heavy');return}
+ if(e.type==='bike'){dismount(e,dir);hitstop=5;spark(e.x,e.y-40,true);snd('heavy');return}
  if(isGiant(e)){
   if(e.dead)return;
   e.hp-=dmg;e.flash=3;score+=dmg*10;setEnemyHud(e);
-  const heavy=kind==='heavy';spark(P.x+P.face*16,P.y-P.z-26,heavy);hitstop=heavy?5:2;shake=heavy?3:1;snd(hitSnd||(heavy?'heavy':'hit'));
+  const heavy=kind==='heavy';spark(P.x+P.face*16,P.y-P.z-34,heavy);hitstop=heavy?5:2;shake=heavy?3:1;snd(hitSnd||(heavy?'heavy':'hit'));
   if(e.hp<=0){giantDie(e);return}
   e.stg+=dmg;if(e.stg>=70&&e.st!=='stagger'){e.stg=0;e.st='stagger';e.t=0;e.glow=0}
   return;
@@ -1063,7 +1063,7 @@ function hurtEnemy(e,dmg,kind,dir,kb){
  if(e.T.rival){e.hits=(e.hits||0)+1;e.hitT=120}
  e.hp-=dmg;e.flash=5;score+=dmg*10;setEnemyHud(e);e.token=false;e.cool=Math.max(e.cool,30);e.dash=false;e.glow=0;e.aiming=false;
  const heavy=kind==='heavy'||e.hp<=0||e.z>2,s=e.sc||1;
- spark(e.x-dir*4,e.y-28*s,heavy);hitstop=heavy?6:3;shake=heavy?4:2;snd(hitSnd||(heavy?'heavy':'hit'));
+ spark(e.x-dir*4,e.y-36*s,heavy);hitstop=heavy?6:3;shake=heavy?4:2;snd(hitSnd||(heavy?'heavy':'hit'));
  if(e.hp<=0){killEnemy(e);knock(e,dir,2,2.8);if(e.T.rival){hitstop=20;flashT=5;for(const o of ents)if(o!==e&&o.kind==='enemy'&&!o.dead&&!isGiant(o)){killEnemy(o);knock(o,o.x>=e.x?1:-1,2,2.8)}}return}
  if(heavy){knock(e,dir,1.6,2.4);return}
  e.st='hurt';e.t=0;e.vx=dir*kb;e.face=-dir;e.stun=kind==='kick'?20:15;
@@ -1096,7 +1096,7 @@ function gainLife(x,y){lives++;popup(x,y,'1UP');showMsg('1UP！',90);snd('oneup'
 function enemyHitsPlayer(e,dmg,heavy){
  const p=P;if(p.inv>0||['air','down','getup','special','throwP','throwK'].includes(p.st))return false;
  if(e&&(e.mini||(e.T&&e.T.mini)))dmg=Math.round(dmg*.6);
- p.hp-=dmg;p.flash=5;hitstop=3;shake=heavy?4:2;snd('hurt');spark(p.x-e.face*3,p.y-p.z-28,heavy);
+ p.hp-=dmg;p.flash=5;hitstop=3;shake=heavy?4:2;snd('hurt');spark(p.x-e.face*3,p.y-p.z-37,heavy);
  releaseHeld();
  if(p.hp<=0){p.hp=0;if(p.heldBy)releasePlayer();knockP(e.face,2,2.6);return true}
  if(p.st==='held'&&!heavy)return true;
@@ -1130,7 +1130,7 @@ function updWThrow(){const p=P;p.t++;
  if(p.t>=16){p.st='idle';p.t=0}}
 function startBack(){const p=P;p.st='back';p.t=0;p.z=0;p.vz=0;p.vx=0;p.vy=0;snd('whiff')}
 function updBack(){const p=P;p.t++;
- if(p.t===5){if(playerAttack(-30,-2,10,12,'heavy',0,-p.face))snd('heavy');parts.push({t:'spark',x:p.x-p.face*20,y:p.y-28,life:5,max:5,big:false})}
+ if(p.t===5){if(playerAttack(-30,-2,10,12,'heavy',0,-p.face))snd('heavy');parts.push({t:'spark',x:p.x-p.face*20,y:p.y-36,life:5,max:5,big:false})}
  if(p.t>=18){p.st='idle';p.t=0}}
 function startPunch(){const p=P;p.pk=(p.comboT>0&&p.landed)?(p.pk+1)%4:0;p.landed=false;p.st='punch';p.t=0;snd('whiff')}
 function startJump(mx,my){const p=P;p.st='jump';p.t=0;p.vz=3.6;p.vx=mx*1.4;p.vy=my*.5;p.jatk=null;p.jt=0;p.jhit=false;p.grabT=0;snd('jump')}
@@ -1154,7 +1154,7 @@ const ESC={hammer:{t:40,dmg:10,pose:'charge',lunge:1.2},bull:{t:40,dmg:12,pose:'
 function bossEscape(e){const p=P,c=ESC[e.type];p.held=null;e.lifted=false;e.st='esc';e.t=0;e.face=p.x>=e.x?1:-1;e.vx=e.face*c.lunge;p.st='idle';p.t=0;
  if(c.late){p.st='hurt';p.t=0;p.vx=0;p.face=-e.face;e.vx=0;snd('whiff');return}
  enemyHitsPlayer(e,c.dmg,true);shake=6;hitstop=6;snd('heavy');snd('whiff')}
-function updEsc(e){e.t++;const c=ESC[e.type];if(c.late&&e.t===c.late){e.vx=e.face*c.lunge;const p=P;if(Math.abs(p.x-e.x)<e.T.rad+34&&Math.abs(p.y-e.y)<12){enemyHitsPlayer(e,c.dmg,true);shake=7;hitstop=7;snd('clang');spark(p.x-e.face*4,p.y-p.z-30,1)}}e.x+=e.vx;e.vx*=.85;if(e.flash>0)e.flash--;clampE(e);if(e.t>=24){e.st=e.T.rival?'rr':'idle';e.t=e.T.rival?6:0;e.cool=30}}
+function updEsc(e){e.t++;const c=ESC[e.type];if(c.late&&e.t===c.late){e.vx=e.face*c.lunge;const p=P;if(Math.abs(p.x-e.x)<e.T.rad+34&&Math.abs(p.y-e.y)<12){enemyHitsPlayer(e,c.dmg,true);shake=7;hitstop=7;snd('clang');spark(p.x-e.face*4,p.y-p.z-38,1)}}e.x+=e.vx;e.vx*=.85;if(e.flash>0)e.flash--;clampE(e);if(e.t>=24){e.st=e.T.rival?'rr':'idle';e.t=e.T.rival?6:0;e.cool=30}}
 function updGrab(mx,my){
  const p=P,e=p.held;p.t++;p.gt++;
  if(!e||e.st!=='grabbed'){p.held=null;p.st='idle';p.t=0;return}
@@ -1173,7 +1173,7 @@ function updStrike(){
  if(e&&e.st==='grabbed'&&ESC[e.type]&&p.gt>=ESC[e.type].t&&p.t<4){bossEscape(e);return}
  if(e&&e.st==='grabbed'){e.x=p.x+p.face*hoff(e);e.y=p.y}
  if(p.t===4&&e&&e.st==='grabbed'){
-  e.hp-=5;e.flash=5;score+=50;setEnemyHud(e);spark(e.x-p.face*3,e.y-20,0);hitstop=3;snd('hit');p.gcount++;
+  e.hp-=5;e.flash=5;score+=50;setEnemyHud(e);spark(e.x-p.face*3,e.y-27,0);hitstop=3;snd('hit');p.gcount++;
   if(isGiant(e)){if(e.hp<=0){p.held=null;giantDie(e)}else if(p.gcount>=3){p.held=null;e.st='hurt';e.t=0;e.stun=24;e.vx=p.face*1.2;snd('heavy')}}
   else if(e.hp<=0||p.gcount>=3){p.held=null;if(e.hp<=0)killEnemy(e);knock(e,p.face,1.8,2.4);snd('heavy')}
  }
@@ -1437,12 +1437,12 @@ function updEnemy(e){
   case 'grab':
    e.t++;if(p.heldBy!==e){e.st='idle';e.t=0;return}
    e.x=p.x-e.face*14;e.y=p.y;
-   if(e.t%32===20){p.hp-=4;p.flash=4;snd('hurt');spark(p.x,p.y-30,0);shake=2;if(p.hp<=0){p.hp=0;releasePlayer();knockP(e.face,1.6,2.4)}}
+   if(e.t%32===20){p.hp-=4;p.flash=4;snd('hurt');spark(p.x,p.y-40,0);shake=2;if(p.hp<=0){p.hp=0;releasePlayer();knockP(e.face,1.6,2.4)}}
    if(e.t>=110&&p.heldBy===e){releasePlayer();p.st='hurt';p.t=0;p.vx=e.face*1.5;e.cool=80}
    return;
   case 'aim':
    e.t++;e.aiming=true;if(Math.abs(p.y-e.y)>1)e.y+=Math.sign(p.y-e.y)*.25;
-   if(e.t>=46){e.aiming=false;fx.push({k:'bullet',x:e.x+e.face*17,y:e.y,vx:e.face*5,t:0});snd('shot');spark(e.x+e.face*18,e.y-31,0);e.st='rec';e.t=0}
+   if(e.t>=46){e.aiming=false;fx.push({k:'bullet',x:e.x+e.face*17,y:e.y,vx:e.face*5,t:0});snd('shot');spark(e.x+e.face*18,e.y-40,0);e.st='rec';e.t=0}
    return;
   case 'wind':
    e.t++;
@@ -1698,7 +1698,7 @@ function updFx(){
    if(f.x<cam-30||f.x>cam+W+30||f.t>260)f.dead=true}
   else if(f.k==='hook'){const e=f.owner;if(!e||e.dead||e.st!=='atk'||e.move!=='hook'){f.dead=true;continue}
    if(!f.back){f.x+=f.vx;if(f.t%3===0)snd('chain');const p=P;
-    if(Math.abs(p.x-f.x)<10&&Math.abs(p.y-f.y)<7&&p.z<20&&p.inv<=0&&!['air','down','getup','special','held','throwP','throwK'].includes(p.st)){f.dead=true;e.hooked=true;e.t=0;releaseHeld();dropWeapon();if(p.heldBy)releasePlayer();p.st='held';p.t=0;p.heldBy=e;p.esc=-9999;snd('hit');spark(p.x,p.y-28,1);showMsg('必殺技で逃げろ！',90)}
+    if(Math.abs(p.x-f.x)<10&&Math.abs(p.y-f.y)<7&&p.z<20&&p.inv<=0&&!['air','down','getup','special','held','throwP','throwK'].includes(p.st)){f.dead=true;e.hooked=true;e.t=0;releaseHeld();dropWeapon();if(p.heldBy)releasePlayer();p.st='held';p.t=0;p.heldBy=e;p.esc=-9999;snd('hit');spark(p.x,p.y-36,1);showMsg('必殺技で逃げろ！',90)}
     else if(Math.abs(f.x-e.x)>190||f.x<cam-10||f.x>cam+W+10)f.back=true}
    else{f.x-=f.vx*1.3;if(Math.abs(f.x-e.x)<30)f.dead=true}}
   else if(f.k==='proj'){
@@ -1774,7 +1774,7 @@ function updWaves(){
  for(const q of spawnQ)if(!q.done&&waveT>=q.d){q.done=true;spawnEnemy(q)}
  const alive=ents.some(e=>e.kind==='enemy'&&!e.dead);
  if(!spawnQ.some(q=>!q.done)&&!alive&&waveT>30){lock=false;waveI++;
-  if(waveI>=S.waves.length){clearT=stageIdx===LAST?320:230;{const hb=Math.max(0,Math.round(P.hp))*100,nb=stageDied?0:10000;score+=hb+nb;saveHi();tallyEl.innerHTML='体力ボーナス　'+hb+'<br>ノーミスボーナス　'+(stageDied?'なし':nb)+'<br>スコア　'+score;tallyEl.style.display='block'}showMsg(stageIdx===LAST?'デッドエンド団　壊滅！':('第'+(stageIdx+1)+'区　突破！'),220);playMusic('title');
+  if(waveI>=S.waves.length){clearT=stageIdx===LAST?320:230;clearT+=80;{const k=S.kills||0,hb=Math.max(0,Math.round(P.hp))*100,kb=k*200,nb=stageDied?0:10000,s0=score;score+=hb+kb+nb;saveHi();S.tally={t:0,s0,lines:['体力ボーナス　'+hb,'討伐ボーナス　'+k+'人×200＝'+kb,'ノーミスボーナス　'+(stageDied?'なし':nb)],tot:hb+kb+nb};tallyEl.innerHTML='';tallyEl.style.display='block'}showMsg(stageIdx===LAST?'デッドエンド団　壊滅！':('第'+(stageIdx+1)+'区　突破！'),220);playMusic('title');
    if(stageIdx===LAST){mika={kind:'npc',spr:'mika',pal:Object.assign({},BASEPAL,PALS.mika,{id:'mika'}),sc:1,x:cam+W-50,y:150,z:0,face:-1,st:'tied',t:0,T:{}};ents.push(mika)}}
   else if(S.th.suiteAt===waveI){S.enterT=1}
   else if(S.th.len>W)goT=220;else if(S.shaft){S.travelT=1;S.ev0=S.ev;shake=2;snd('door')}}
@@ -1820,6 +1820,8 @@ function update(){
  if(S.th.rain){if(S.lf>0)S.lf--;if(--S.ltT<=0){S.ltT=380+Math.random()*520;S.lf=10;setTimeout(()=>snd('thunder'),250)}}
  if(goT>0)goT--;
  if(mika&&Math.abs(P.x-mika.x)<26&&mika.st==='tied'){mika.st='cheer';mika.t=0;snd('oneup');P.face=1}
+ if(clearT>0&&S.tally){const T=S.tally;T.t++;const n=Math.min(T.lines.length,Math.floor((T.t-20)/30)+1);if(T.t>=20){const done=T.t>=20+30*T.lines.length;const sc=done?T.s0+T.tot:T.s0+Math.round(T.tot*Math.min(1,(T.t-20)/(30*T.lines.length)));
+   if((T.t-20)%30===0&&n<=T.lines.length)snd('pick');tallyEl.innerHTML=T.lines.slice(0,n).join('<br>')+'<br>スコア　'+sc}}
  if(clearT>0){clearT--;if(clearT===0){
   tallyEl.style.display='none';saveHi();
   if(runMode==='select'){mode='sclear';hud.style.display='none';playMusic('title');showScreen('<div class="big">'+THEMES[stageIdx].name+'<br>クリア！</div><p>スコア '+score+'</p>'+(stageIdx===LAST?'<p class="note">エンディングは「はじめから」で1〜5面を通してクリアすると見られます</p>':'')+'<div class="blink">タップでステージセレクトへ</div>')}
@@ -1836,7 +1838,7 @@ function updHud(){
  php.style.width=(P.hp/P.max*100)+'%';php.style.background=P.hp<=30?'#ff4a3a':'#ffd23a';
  lv.textContent='残り '+Math.max(0,lives);{const w=P.weapon,key=w?w.type+w.dur:'';if(key!==wpKey){wpKey=key;if(!w)wpEl.innerHTML='';else{const mx=WPN[w.type].dur,lo=w.dur<=Math.ceil(mx/4);let h='';for(let i=0;i<mx;i++)h+='<i class="'+(i<w.dur?(lo?'lo':''):'e')+'"></i>';wpEl.innerHTML='<b>'+WPN[w.type].name+'</b><span class="pips">'+h+'</span><b>'+w.dur+'/'+mx+'</b>'}}}scEl.textContent=String(score).padStart(7,'0');
  const gi=ents.find(e=>e.kind==='enemy'&&isBoss(e)&&!e.dead);if(gi){lastEnemy=gi;enemyHudT=Math.max(enemyHudT,2)}
- if(enemyHudT>0&&lastEnemy){enemyHudT--;enEl.style.opacity=1;enm.textContent=lastEnemy.name;{const e=lastEnemy,hp=Math.max(0,e.hp),n=Math.ceil(e.max/HPU),cur=Math.max(1,Math.ceil(hp/HPU)),rest=hp-(cur-1)*HPU,cap=n>1?HPU:e.max;ebarEl.style.width=(Math.min(e.max,HPU)/HPU*100)+'%';ehp.style.width=(rest/cap*100)+'%';ehp.style.background=LCOL[(cur-1)%LCOL.length];ebarEl.style.background=cur>1?LCOL[(cur-2)%LCOL.length]:'#3a0e14';estarEl.textContent='★'.repeat(cur-1)}}else enEl.style.opacity=0;
+ if(enemyHudT>0&&lastEnemy){enemyHudT--;enEl.style.opacity=1;enm.textContent=lastEnemy.name;{const e=lastEnemy,hp=Math.max(0,e.hp),n=Math.ceil(e.max/HPU),cur=Math.max(1,Math.ceil(hp/HPU)),rest=hp-(cur-1)*HPU,cap=n>1?HPU:e.max;ebarEl.style.width=(Math.min(e.max,HPU)/HPU*100)+'%';ehp.style.width=(rest/cap*100)+'%';ehp.style.background=LCOL[(cur-1)%LCOL.length];ebarEl.style.background=cur>1?LCOL[(cur-2)%LCOL.length]:'#3a0e14';estarEl.textContent=cur-1>3?'★×'+(cur-1):'★'.repeat(cur-1)}}else enEl.style.opacity=0;
 }
 
 /* ===== キャラ描画 ===== */
