@@ -235,7 +235,7 @@ const ETYPES={
  brute:{spr:'brute',hp:120,sp:.55,pts:2000,big:1,atk:{wind:28,act:8,rec:28,r0:4,range:36,dmg:14,heavy:1}},
  hammer:{spr:'hammer',sc:1.5,hp:400,sp:.5,pts:30000,giant:1,rad:11,moves:['pound','grab','drum'],atk:{wind:30,act:8,rec:30,r0:0,range:46,dmg:16},names:['ハンマー']},
  bull:{spr:'bull',sc:1.5,hp:440,sp:.62,pts:40000,giant:1,rad:11,moves:['rush','chainsweep','press','call'],atk:{wind:28,act:8,rec:26,r0:0,range:46,dmg:16},names:['ブル']},
- anchor:{spr:'anchor',sc:1.5,hp:480,sp:.55,pts:45000,giant:1,rad:11,moves:['hook','chainsweep','drum','hook'],atk:{wind:28,act:8,rec:28,r0:0,range:46,dmg:16},names:['アンカー']},
+ anchor:{spr:'anchor',sc:1.5,hp:480,sp:.55,pts:45000,giant:1,rad:11,moves:['hook','chainsweep','cargo','drum','hook','cargo'],atk:{wind:28,act:8,rec:28,r0:0,range:46,dmg:16},names:['アンカー']},
  mech:{spr:'titan',mech:1,sc:3,hp:520,sp:.5,pts:60000,giant:1,rad:22,moves:['missile','rush','pound','press','missile'],atk:{wind:26,act:8,rec:28,r0:0,range:72,dmg:18},names:['ゴリアテ']},
  rival:{spr:'rival',hp:300,sp:1.3,pts:50000,rival:1,atk:{wind:0,act:0,rec:18,r0:0,range:24,dmg:6},names:['カイン']},
  grave:{spr:'grave',sc:1.5,hp:560,sp:.55,pts:60000,giant:1,rad:11,moves:['mg','burst','retreat','mg'],atk:{wind:16,act:8,rec:24,r0:0,range:44,dmg:14},names:['グレイヴ']}
@@ -544,6 +544,8 @@ function drawSpr(sp,x,y){const m=sp.m;for(let r=0;r<m.length;r++)for(let i=0;i<m
 const FONT={'0':'111101101101111','1':'010110010010111','2':'111001111100111','3':'111001111001111','4':'101101111001001','5':'111100111001111','6':'111100111101111','7':'111001001001001','8':'111101111101111','9':'111101111001111','+':'000010111010000','G':'111100101101111','O':'111101101101111','U':'101101101101111','P':'111101111100100'};
 function ptext(str,x,y,col,sc){sc=sc||1;for(let pass=0;pass<2;pass++){let cx=x;for(const ch of str){const b=FONT[ch];if(b)for(let i=0;i<15;i++)if(b[i]==='1'){g.fillStyle=pass?col:'#1a0a10';g.fillRect(cx+(i%3)*sc+(pass?0:1),y+((i/3)|0)*sc+(pass?0:1),sc,sc)}cx+=4*sc}}}
 function hashN(i){const v=Math.sin(i*91.7+((frame/4)|0)*13.3)*43758.5;return v-Math.floor(v)}
+function drawCargo(x,y){const o='#0c0810';g.fillStyle=o;g.fillRect(x-11,y-17,22,17);g.fillStyle='#a8844a';g.fillRect(x-10,y-16,20,15);g.fillStyle='#8a6a3a';g.fillRect(x-10,y-11,20,1);g.fillRect(x-10,y-6,20,1);g.fillStyle='#5a4220';g.fillRect(x-10,y-16,2,15);g.fillRect(x+8,y-16,2,15);g.fillStyle='#d8c8a0';g.fillRect(x-10,y-16,20,1);
+ g.fillStyle='#2a3a6a';g.fillRect(x-5,y-14,10,1);g.fillRect(x-5,y-10,2,1);g.fillRect(x-1,y-10,2,1);g.fillRect(x+3,y-10,2,1);g.fillStyle='#c8302a';g.fillRect(x-4,y-5,8,2)}
 function drawFire(x,y,nd){
  g.globalAlpha=.1+hashN(x)*.05;pcircle(g,x+5,y-18,16,'#ff9a40');g.globalAlpha=1;
  if(nd){y+=12}else{g.fillStyle='#0c0810';g.fillRect(x-1,y-15,13,16);g.fillStyle='#5a5e66';g.fillRect(x,y-14,11,14);g.fillStyle='#8a8e96';g.fillRect(x+2,y-14,1,14);
@@ -1280,7 +1282,7 @@ function updBike(e){
  if(!e.hitDone&&Math.abs(P.x-e.x)<15&&Math.abs(P.y-e.y)<6&&P.z<14){if(enemyHitsPlayer(e,12,true))e.hitDone=true}
  if((e.vx>0&&e.x>cam+W+60)||(e.vx<0&&e.x<cam-60))e.remove=true;
 }
-const GWIND={pound:34,grab:16,drum:22,rush:26,chainsweep:22,press:18,call:24,mg:28,burst:14,retreat:8,swing:28,hook:24,missile:30};
+const GWIND={pound:34,grab:16,drum:22,rush:26,chainsweep:22,press:18,call:24,mg:28,burst:14,retreat:8,swing:28,hook:24,missile:30,cargo:30};
 function updGiant(e){
  if(e.flash>0)e.flash--;if(e.muz>0)e.muz--;
  const p=P,A=e.T.atk;
@@ -1334,6 +1336,7 @@ function updGiant(e){
 function startMove(e){const p=P;
  switch(e.move){
   case 'pound':shake=8;snd('boom');dust(e.x+e.face*30,e.y);fx.push({k:'quake',x:e.x+e.face*26,y:e.y,vx:e.face*3.2,t:0,hit:false});break;
+  case 'cargo':{snd('whiff');const tx=clamp(p.x,cam+16,cam+W-16),ty=clamp(p.y,GY0,GY1);fx.push({k:'cargo',x0:e.x+e.face*6,y0:e.y,tx,ty,x:e.x,y:e.y,z:44,T:Math.round(30+Math.abs(tx-e.x)*.08),t:0});break}
   case 'drum':snd('whiff');fx.push({k:'drum',x:e.x+e.face*24,y:e.y,vx:e.face*2.8,t:0,hit:false});break;
   case 'press':{const T=46;e.vz=4.2;e.vx=(p.x-e.x)/T;e.vy=(p.y-e.y)/T;fx.push({k:'marker',x:p.x,y:p.y,t:0,T});snd('jump');break}
   case 'rush':e.passes=0;snd('bike');break;
@@ -1351,6 +1354,7 @@ function doMove(e){const p=P,A=e.T.atk;
   case 'swing':if(e.t===2){if(inBox(e,p,-10,A.range,14))enemyHitsPlayer(e,A.dmg,true);shake=4;snd('heavy')}if(e.t>=A.act)endMove(e);break;
   case 'pound':if(e.t>=22)endMove(e);break;
   case 'drum':if(e.t>=16)endMove(e);break;
+  case 'cargo':if(e.t>=18)endMove(e);break;
   case 'grab':
    if(!e.holding){e.x+=e.face*2.6;
     if(inBox(e,p,-4,40,10)&&p.inv<=0&&!['air','down','getup','special','held'].includes(p.st)){e.holding=true;e.t=0;releaseHeld();dropWeapon();if(p.heldBy)releasePlayer();p.st='held';p.t=0;p.heldBy=e;p.esc=-9999;snd('hit');showMsg('必殺技で逃げろ！',90)}
@@ -1667,6 +1671,9 @@ function updFx(){
    if(!f.hit&&Math.abs(P.x-f.x)<10&&Math.abs(P.y-f.y)<9&&P.z<5){if(enemyHitsPlayer({face:Math.sign(f.vx)},14,true))f.hit=true}if(f.x<cam-20||f.x>cam+W+20)f.dead=true}
   else if(f.k==='drum'){f.x+=f.vx;if(!f.hit&&Math.abs(P.x-f.x)<10&&Math.abs(P.y-f.y)<7&&P.z<10){if(enemyHitsPlayer({face:Math.sign(f.vx)},12,true))f.hit=true}if(f.x<cam-30||f.x>cam+W+30)f.dead=true}
   else if(f.k==='marker'){if(f.t>=f.T)f.dead=true}
+  else if(f.k==='cargo'){const u=Math.min(1,f.t/f.T);f.x=f.x0+(f.tx-f.x0)*u;f.y=f.y0+(f.ty-f.y0)*u;f.z=44*(1-u)+60*4*u*(1-u);
+   if(u>=1){f.dead=true;snd('break');snd('thud');shake=Math.max(shake,5);dust(f.x,f.y);for(let i=0;i<14;i++)parts.push({t:'deb',x:f.x,y:f.y,z:4,vx:(Math.random()-.5)*3.4,vz:1+Math.random()*3,col:rpick(['#8a6a3a','#a8844a','#5a4220','#d8c8a0']),life:50});
+    if(Math.abs(P.x-f.x)<15&&Math.abs(P.y-f.y)<9&&P.z<12)enemyHitsPlayer({face:P.x>=f.x?1:-1},14,true)}}
   else if(f.k==='missile'){if(f.ph===0){f.z+=5;if(f.t>=22){f.ph=1;f.x=f.tx;f.y=f.ty;f.z=170;f.t=0}}else{f.z-=4.5;if(f.z<=0){f.dead=true;boom(f.x,f.y-6,true);snd('boom');shake=Math.max(shake,5);if(Math.hypot(P.x-f.x,(P.y-f.y)*2)<22&&P.z<10)enemyHitsPlayer({face:P.x>=f.x?1:-1},12,true)}}}
   else if(f.k==='hook'){const e=f.owner;if(!e||e.dead||e.st!=='atk'||e.move!=='hook'){f.dead=true;continue}
    if(!f.back){f.x+=f.vx;if(f.t%3===0)snd('chain');const p=P;
@@ -1706,6 +1713,7 @@ function drawFxGround(){
   else if(f.k==='drum'){const x=Math.round(f.x-cam),y=Math.round(f.y);g.globalAlpha=.35;pellipse(g,x,y,9,2,'#000000');g.globalAlpha=1;g.fillStyle='#0c0810';g.fillRect(x-9,y-13,18,13);g.fillStyle='#5a5e66';g.fillRect(x-8,y-12,16,11);g.fillStyle='#8a8e96';g.fillRect(x-8,y-12,16,2);const o=((f.t/3)|0)%4;g.fillStyle='#3a3e46';for(let k=o;k<16;k+=4)g.fillRect(x-8+k,y-12,1,11);g.fillStyle='#c8302a';g.fillRect(x-8,y-7,16,2)}
   else if(f.k==='missile'&&f.ph===1){if((f.t>>2)&1)ring(f.x-cam,f.y,12,3,'#ff3030','#ffb0a0')}
   else if(f.k==='marker'){if((f.t>>2)&1)ring(f.x-cam,f.y,14,4,'#ff3030','#ffb0a0')}
+  else if(f.k==='cargo'){if((f.t>>2)&1)ring(f.tx-cam,f.ty,14,4,'#ff3030','#ffb0a0');const x=Math.round(f.x-cam),y=Math.round(f.y);g.globalAlpha=.35;pellipse(g,x,y,10,2,'#000000');g.globalAlpha=1;drawCargo(x,Math.round(y-f.z))}
   else if(f.k==='wreck'){drawBikeAt(Math.round(f.x-cam),Math.round(f.y),f.face,true)}
  }
 }
@@ -1836,9 +1844,9 @@ function frameOf(e){
  if(isGiant(e)){
   switch(st){
    case 'walk':return 'walk'+(((t/8)|0)%4);
-   case 'wind':return {pound:'windup2',grab:'charge',drum:'throw',rush:'charge',chainsweep:'raise',press:'crouch',call:'raise',mg:'aim',burst:'aim',retreat:'crouch',swing:'windup2',hook:'raise'}[e.move]||'idle0';
+   case 'wind':return {pound:'windup2',grab:'charge',drum:'throw',cargo:'raise',rush:'charge',chainsweep:'raise',press:'crouch',call:'raise',mg:'aim',burst:'aim',retreat:'crouch',swing:'windup2',hook:'raise'}[e.move]||'idle0';
    case 'drop':return 'jump';
-   case 'atk':if(e.move==='hook')return e.hooked?'grab':'straight';if(e.move==='grab')return e.holding?'throw':'grab';if(e.move==='press'||e.move==='retreat')return e.z>0?'jump':'crouch';return {pound:'smash',drum:'swing',rush:'charge',chainsweep:'swing',call:'raise',mg:'aim',burst:'aim',swing:'smash'}[e.move]||'idle0';
+   case 'atk':if(e.move==='hook')return e.hooked?'grab':'straight';if(e.move==='grab')return e.holding?'throw':'grab';if(e.move==='press'||e.move==='retreat')return e.z>0?'jump':'crouch';return {pound:'smash',cargo:'smash',drum:'swing',rush:'charge',chainsweep:'swing',call:'raise',mg:'aim',burst:'aim',swing:'smash'}[e.move]||'idle0';
    case 'rec':return((e.move==='swing'||e.move==='pound')&&t<10)?'smash':'idle0';
    case 'stagger':case 'hurt':return 'hurt';
    case 'grabbed':return e.lifted?'down':'hurt';
@@ -1913,6 +1921,7 @@ function drawWeaponOverlay(e,fname,fr,sc){
  if(e.type==='grave'&&e.st==='esc'&&(fname==='raise'||fname==='smash')){const hx=fr.hF[0]*sc,hy=fr.hF[1]*sc;g.save();g.translate(hx,hy);g.rotate(fname==='raise'?-1.9:.4);if(fname==='smash')g.translate(14,0);
   g.fillStyle='#0c0810';g.fillRect(-26,-5,36,7);g.fillStyle='#2a2a30';g.fillRect(-22,-4,22,3);g.fillStyle='#6a6a72';g.fillRect(-22,-4,22,1);g.fillStyle='#3a2a1a';g.fillRect(0,-4,9,5);g.fillStyle='#5a4028';g.fillRect(0,-4,9,1);pcircle(g,-8,2,4,'#0c0810');pcircle(g,-8,2,3,'#2a2a30');g.restore();return}
  if((e.type==='bull'||e.type==='anchor')&&(fname==='raise'||fname==='swing')&&(e.move==='chainsweep'))w='chain';
+ if(e.type==='anchor'&&e.st==='wind'&&e.move==='cargo'){const hx=fr.hF[0]*sc,hy=fr.hF[1]*sc;drawCargo(Math.round(hx-1),Math.round(hy+2));return}
  if(e.type==='hammer'&&e.st==='wind'&&e.move==='drum'){const hx=fr.hF[0]*sc,hy=fr.hF[1]*sc;g.fillStyle='#0c0810';g.fillRect(hx-14,hy-24,26,22);g.fillStyle='#5a5e66';g.fillRect(hx-13,hy-23,24,20);g.fillStyle='#8a8e96';g.fillRect(hx-13,hy-23,4,20);g.fillStyle='#c8302a';g.fillRect(hx-13,hy-14,24,3);return}
  if(w==='sword'&&['jab','idle0','idle1','walk0','walk1','walk2','walk3','raise'].includes(fname)){const hx=fr.hF[0]*sc,hy=fr.hF[1]*sc;pline(g,hx,hy,fname==='jab'?hx+16:hx+3,fname==='jab'?hy:hy-13,'#0c0810',3);pline(g,hx+1,hy+1,fname==='jab'?hx+16:hx+3,fname==='jab'?hy:hy-12,'#d8dce4',1);return}
  if(w==='mg'){const hx=fr.hF[0]*sc,hy=fr.hF[1]*sc;g.fillStyle='#0c0810';g.fillRect(hx-8,hy-5,34,7);g.fillStyle='#3a2a1a';g.fillRect(hx-7,hy-4,8,4);g.fillStyle='#2a2a30';g.fillRect(hx,hy-4,22,3);g.fillStyle='#6a6a72';g.fillRect(hx,hy-4,22,1);pcircle(g,hx+8,hy+2,4,'#0c0810');pcircle(g,hx+8,hy+2,3,'#2a2a30');g.fillStyle='#3a3a42';g.fillRect(hx+22,hy-3,4,1);
