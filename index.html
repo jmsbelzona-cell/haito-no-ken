@@ -877,7 +877,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月22日 17時10分版';
+const BUILD='11月22日 17時30分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1071,7 +1071,7 @@ function hurtEnemy(e,dmg,kind,dir,kb){
  if(isGiant(e)){
   if(e.dead)return;
   e.hp-=dmg;e.flash=3;score+=dmg*10;setEnemyHud(e);
-  const heavy=kind==='heavy';spark(P.x+P.face*16,P.y-P.z-34,heavy);hitstop=heavy?5:2;shake=heavy?3:1;snd(e.hp<=0?hitSndOf(true):(hitSnd==='punchH'?'low':hitSnd||(heavy?'heavy':'hit')));
+  const heavy=kind==='heavy';spark(P.x+P.face*16,P.y-P.z-34,heavy);hitstop=heavy?5:2;shake=heavy?3:1;snd(e.T.mech?'drumS':(e.hp<=0?hitSndOf(true):(hitSnd==='punchH'?'low':hitSnd||(heavy?'heavy':'hit'))));
   if(e.hp<=0){giantDie(e);return}
   e.stg+=dmg;if(e.stg>=70&&e.st!=='stagger'){e.stg=0;e.st='stagger';e.t=0;e.glow=0}
   return;
