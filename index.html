@@ -1138,6 +1138,10 @@ function checkAutoGrab(mx,my){
  if(p.grabT>=3){p.grabT=0;p.st='grab';p.t=0;p.gt=0;p.gcount=0;p.held=best;best.st='grabbed';best.t=0;best.token=false;best.aiming=false;best.lifted=false;snd('hit');
   if(!grabHint){;grabHint=true}}
 }
+const ESC={hammer:{t:40,dmg:10,pose:'charge',lunge:1.2},bull:{t:40,dmg:12,pose:'smash',lunge:0},anchor:{t:40,dmg:12,pose:'swing',lunge:0},grave:{t:40,dmg:10,pose:'straight',lunge:.8},rival:{t:24,dmg:8,pose:'upper',lunge:.6}};
+function bossEscape(e){const p=P,c=ESC[e.type];p.held=null;e.lifted=false;e.st='esc';e.t=0;e.inv=20;e.face=p.x>=e.x?1:-1;e.vx=e.face*c.lunge;p.st='idle';p.t=0;
+ enemyHitsPlayer(e,c.dmg,true);shake=6;hitstop=6;snd('heavy');snd('whiff')}
+function updEsc(e){e.t++;e.x+=e.vx;e.vx*=.85;if(e.flash>0)e.flash--;clampE(e);if(e.t>=24){e.st=e.T.rival?'rr':'idle';e.t=e.T.rival?6:0;e.cool=30}}
 function updGrab(mx,my){
  const p=P,e=p.held;p.t++;p.gt++;
  if(!e||e.st!=='grabbed'){p.held=null;p.st='idle';p.t=0;return}
@@ -1148,11 +1152,12 @@ function updGrab(mx,my){
   else if(lever){p.tdir=p.face;p.st='throwP';p.t=0;e.lifted=true;snd('whiff')}
   else{p.st='knee';p.t=0}
   return}
- if(isGiant(e)&&p.gt>=50){p.held=null;e.st='idle';e.t=0;e.cool=20;shake=3;snd('heavy');knockP(e.face,1.8,2);return}
+ const ec=ESC[e.type];if(ec){if(p.gt===ec.t-12)e.flash=12;if(p.gt>=ec.t){bossEscape(e);return}}
  if(p.gt>=110){p.held=null;e.st='hurt';e.t=0;e.stun=10;e.vx=p.face*1.5;p.st='hurt';p.t=6;p.vx=-p.face*1.2}
 }
 function updStrike(){
- const p=P,e=p.held;p.t++;
+ const p=P,e=p.held;p.t++;p.gt++;
+ if(e&&e.st==='grabbed'&&ESC[e.type]&&p.gt>=ESC[e.type].t&&p.t<4){bossEscape(e);return}
  if(e&&e.st==='grabbed'){e.x=p.x+p.face*hoff(e);e.y=p.y}
  if(p.t===4&&e&&e.st==='grabbed'){
   e.hp-=5;e.flash=5;score+=50;setEnemyHud(e);spark(e.x-p.face*3,e.y-20,0);hitstop=3;snd('hit');p.gcount++;
@@ -1286,6 +1291,7 @@ function updGiant(e){
   return}
  if(e.type==='grave'){const n=ents.filter(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o)).length;if(n<2){e.guardT=(e.guardT||0)+1;if(e.guardT>=(e.guarded?70:20)){e.guardT=0;e.guarded=true;const o=spawnEnemy({k:'gun',s:(e.guardSide=!e.guardSide)?'L':'R'});o.cool=40}}else e.guardT=0}
  if(e.st==='grabbed')return;
+ if(e.st==='esc'){updEsc(e);return}
  if(e.st==='thrown'){e.t++;e.x+=e.vx;e.z+=e.vz;e.vz-=.18;e.x=clamp(e.x,cam+14,cam+W-14);if(e.z<=0){e.z=0;e.vx=0;shake=7;hitstop=6;snd('heavy');snd('thud');dust(e.x,e.y);if(e.hp<=0){giantDie(e);return}e.st='down';e.t=0}return}
  if(e.st==='down'){e.t++;if(e.t>=50){e.st='getup';e.t=0}return}
  if(e.st==='getup'){e.t++;if(e.t>=20){e.st='idle';e.t=0;e.cool=30}return}
@@ -1473,6 +1479,7 @@ const RCOMBO={act:[4,4,5,8],dur:[12,12,14,26],dmg:[5,5,7,11]};
 function rivalStep(e){
  const p=P;if(e.hitT>0){e.hitT--;if(e.hitT===0)e.hits=0}if(e.vcd>0)e.vcd--;
  switch(e.st){
+  case 'esc':updEsc(e);return true;
   case 'rc':{e.t++;const k=e.ck;
    if(e.t===RCOMBO.act[k]){e.chit=false;if(inBox(e,p,-2,k===3?30:26,8)&&p.z<20&&enemyHitsPlayer(e,RCOMBO.dmg[k],k===3))e.chit=true;snd('whiff')}
    if(k===3)e.x+=e.face*(e.t<14?.6:0);
@@ -1834,6 +1841,7 @@ function frameOf(e){
    case 'rec':return((e.move==='swing'||e.move==='pound')&&t<10)?'smash':'idle0';
    case 'stagger':case 'hurt':return 'hurt';
    case 'grabbed':return e.lifted?'down':'hurt';
+   case 'esc':return t<16?ESC[e.type].pose:'idle0';
    case 'thrown':case 'down':return 'down';
    case 'getup':return 'crouch';
    case 'dying':return t<30?'hurt':'down';
@@ -1846,6 +1854,7 @@ function frameOf(e){
    case 'rc':{const k=e.ck;if(k===3)return t<6?'sobatprep':(t<=18?'sobat':'idle0');return(t>=2&&t<=(k===2?12:9))?['jab','straight','upper'][k]:'idle0'}
    case 'rj':case 'drop':return e.st==='rj'&&e.t<26?'jkick':'jump';
    case 'rs':return (t>>2)&1?'spin1':'spin0';
+   case 'esc':return t<14?'upper':'idle0';
    case 'ukemi':return e.z>6?((t>>2)&1?'spin0':'jump'):'crouch';
    case 'rb':return 'jump';
    case 'rr':case 'getup':return st==='getup'?'crouch':'idle0';
