@@ -1070,6 +1070,7 @@ function hurtEnemy(e,dmg,kind,dir,kb){
 }
 function giantDie(e){
  killEnemy(e);e.st='dying';e.t=0;e.glow=0;e.face=P.x>=e.x?1:-1;e.vx=-e.face*1.4;hitstop=24;flashT=6;shake=6;snd('heavy');fx=fx.filter(f=>f.k==='wreck');
+ if(e.T.mini)ents.push({kind:'item',type:'meat',x:clamp(e.x,cam+20,cam+W-20),y:clamp(e.y,GY0,GY1),z:0,t:0});
  if(!e.T.mini)for(const o of ents)if(o!==e&&o.kind==='enemy'&&!o.dead){if(o.type==='bike'){o.remove=true;o.dead=true}else{killEnemy(o);knock(o,o.x>=e.x?1:-1,2,2.8)}}
  if(P.heldBy)releasePlayer();
 }
@@ -1672,7 +1673,7 @@ function updEnter(){
  const sui=!!S.th.suiteAt;
  if(t<(sui?110:70)){if(sui&&t>=70)S.fade=(t-70)/40;const tx=sui?cam+W+16:161,ty=sui?p.y:GY0;const dx=tx-p.x,dy=ty-p.y;if(Math.abs(dx)>1||Math.abs(dy)>1){p.x+=Math.sign(dx)*Math.min(sui?1.6:1.2,Math.abs(dx));p.y+=Math.sign(dy)*Math.min(.8,Math.abs(dy));p.face=dx>=0?1:-1;if(p.st!=='walk'){p.st='walk';p.t=0}p.t++}else{p.st='idle';p.t++}}
  else if(t<110){S.fade=(t-70)/40;p.t++}
- else if(t===110){const h=sui?buildSuite():buildHall();S.sky=h.sky;S.far=h.far;S.mid=h.mid;S.stage=h.stage;S.lamps=h.lamps.map(l=>({x:l.x+(sui?cam:0),y:l.y}));S.shaft=null;S.fires=(h.fires||[]).map(f=>({x:f.x+(sui?cam:0),y:f.y,nd:1}));S.doors=[];if(sui)S.fixed=true;p.x=cam+30;p.y=150;p.face=1;p.st='walk';p.t=0;S.fade=1;parts=[];if(sui){for(const e of ents)if(e.kind!=='enemy'&&(e.kind==='barrel'||e.x<cam+8||e.x>cam+W-8))e.remove=true;ents.push({kind:'barrel',x:cam+W-60,y:156,z:0,item:'meat'})}}
+ else if(t===110){const h=sui?buildSuite():buildHall();S.sky=h.sky;S.far=h.far;S.mid=h.mid;S.stage=h.stage;S.lamps=h.lamps.map(l=>({x:l.x+(sui?cam:0),y:l.y}));S.shaft=null;S.fires=(h.fires||[]).map(f=>({x:f.x+(sui?cam:0),y:f.y,nd:1}));S.doors=[];if(sui)S.fixed=true;p.x=cam+30;p.y=150;p.face=1;p.st='walk';p.t=0;S.fade=1;parts=[];if(sui){for(const e of ents)if(e.kind!=='enemy'&&(e.kind==='barrel'||e.x<cam+8||e.x>cam+W-8))e.remove=true;ents.push({kind:'barrel',x:cam+50,y:160,z:0,item:'meat'});ents.push({kind:'barrel',x:cam+W-50,y:160,z:0,item:'meat'})}}
  else if(t<150){S.fade=1-(t-110)/40;p.x+=.8;p.t++;}
  else{S.fade=0;S.enterT=0;p.st='idle';p.t=0}
 }
