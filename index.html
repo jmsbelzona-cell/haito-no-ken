@@ -879,7 +879,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 10時15分版';
+const BUILD='11月23日 10時20分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1432,7 +1432,7 @@ function updEnemy(e){
  if(isGiant(e)){const n0=fx.length;AOEMINI=!!e.T.mini;updGiant(e);AOEMINI=false;for(let i=n0;i<fx.length;i++){fx[i].boss=1;if(e.T.mini)fx[i].mini=1}return}
  if(e.flash>0)e.flash--;if(e.inv>0)e.inv--;if(e.vcd>0)e.vcd--;
  const A=e.T.atk,p=P,wp=e.T.wpn;
- if(e.T.vanish&&!(e.vcd>0)&&['idle','walk'].includes(e.st)&&['punch','watk','jump','back'].includes(p.st)&&p.t===1&&Math.abs(p.x-e.x)<38&&Math.abs(p.y-e.y)<10&&Math.random()<.2){
+ if(e.T.vanish&&!(e.vcd>0)&&['idle','walk'].includes(e.st)&&Math.abs(p.y-e.y)<10&&((['punch','watk','back'].includes(p.st)&&p.t===1&&Math.abs(p.x-e.x)<38&&Math.random()<.2)||(p.st==='jump'&&p.jatk&&p.jt===1&&Math.abs(p.x-e.x)<52&&Math.random()<.6))){
   for(let i=0;i<10;i++)parts.push({t:'smoke',x:e.x+(Math.random()-.5)*16,y:e.y-Math.random()*40,life:24});
   const sd=e.x<p.x?-1:1;e.x=clamp(p.x-sd*72,cam+14,cam+W-14);e.y=GY0+Math.random()*(GY1-GY0);e.inv=20;e.vcd=300;e.st='idle';e.t=0;e.token=false;e.cool=30;snd('whiff');
   for(let i=0;i<8;i++)parts.push({t:'smoke',x:e.x+(Math.random()-.5)*14,y:e.y-Math.random()*40,life:20});return}
