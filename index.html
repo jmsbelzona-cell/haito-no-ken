@@ -207,6 +207,7 @@ const THEMES=[
    {at:0,en:[{k:'ninja',s:'A',d:30},{k:'ninja',s:'A',d:60},{k:'kungfu',s:'F',d:160},{k:'woman',s:'F',d:260},{k:'knife',s:'F',d:330},{k:'sumo',s:'A',d:390}]},
    {at:0,en:[{k:'sumo',s:'A',d:30},{k:'gun',s:'F',d:90},{k:'brute',s:'A',d:150},{k:'chain',s:'A',d:180},{k:'woman',s:'A',d:260},{k:'kungfu',s:'A',d:330},{k:'sumo',s:'A',d:400}]},
    {at:0,en:[{k:'brute',s:'A',d:30,name:'ゴンゾ',hp:150},{k:'sumo',s:'A',d:80},{k:'kungfu',s:'F',d:120},{k:'brute',s:'A',d:250},{k:'knife',s:'A',d:200},{k:'woman',s:'A',d:300},{k:'ninja',s:'A',d:370},{k:'gun',s:'F',d:430},{k:'chain',s:'A',d:490}]},
+   {at:0,en:[{k:'proto',s:'A',d:60},{k:'punk',s:'A',d:200},{k:'chain',s:'F',d:320}]},
    {at:0,en:[{k:'mech',s:'A',d:90}]}
   ],
   weapons:[[220,160,'pipe']],
@@ -242,6 +243,7 @@ const ETYPES={
  hammer:{spr:'hammer',sc:1.5,hp:400,sp:.5,pts:30000,giant:1,rad:11,moves:['pound','grab','drum'],atk:{wind:30,act:8,rec:30,r0:0,range:46,dmg:16},names:['ハンマー']},
  bull:{spr:'bull',sc:1.5,hp:440,sp:.62,pts:40000,giant:1,rad:11,barCall:1,moves:['rush','chainsweep','press'],atk:{wind:28,act:8,rec:26,r0:0,range:46,dmg:16},names:['ブル']},
  anchor:{spr:'anchor',sc:1.5,hp:480,sp:.55,pts:45000,giant:1,rad:11,moves:['hook','chainsweep','cargo','drum','hook','cargo'],atk:{wind:28,act:8,rec:28,r0:0,range:46,dmg:16},names:['アンカー']},
+ proto:{spr:'titan',mech:1,proto:1,mini:1,dmgMul:.7,mk:.55,tint:'rgba(255,100,0,.62)',sc:1.5,hp:250,sp:.6,pts:15000,giant:1,rad:12,moves:['stretch','hmissile','stretch'],atk:{wind:24,act:8,rec:24,r0:0,range:44,dmg:15},names:['ゴリアテ prot']},
  mech:{spr:'titan',mech:1,sc:3,hp:520,sp:.5,pts:60000,giant:1,rad:22,moves:['missile','hmissile','rush','pound','hmissile','press','missile'],atk:{wind:26,act:8,rec:28,r0:0,range:72,dmg:18},names:['ゴリアテ']},
  rival:{spr:'rival',hp:300,sp:1.3,pts:50000,rival:1,atk:{wind:0,act:0,rec:18,r0:0,range:24,dmg:6},names:['カイン']},
  grave:{spr:'grave',sc:1.5,hp:560,sp:.55,pts:60000,giant:1,rad:11,moves:['mg','burst','retreat','mg'],atk:{wind:16,act:8,rec:24,r0:0,range:44,dmg:14},names:['グレイヴ']}
@@ -882,7 +884,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 19時25分版';
+const BUILD='11月23日 20時50分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}]))+helpHTML();
 }
@@ -1121,7 +1123,7 @@ function pickItem(it){it.remove=true;snd('item');
 function gainLife(x,y){lives++;popup(x,y,'1UP');showMsg('1UP！',90);snd('oneup')}
 function enemyHitsPlayer(e,dmg,heavy){
  const p=P;if(p.inv>0||['air','down','getup','special','throwP','throwK'].includes(p.st))return false;
- if(e&&(e.mini||(e.T&&e.T.mini)))dmg=Math.round(dmg*.6);
+ if(e&&(e.mini||(e.T&&e.T.mini)))dmg=Math.round(dmg*((e.T&&e.T.dmgMul)||.6));
  p.hp-=dmg;p.flash=5;hitstop=3;shake=heavy?4:2;snd(e&&e.T&&(e.T.wpn==='sword'||e.T.wpn==='knife')?'cut':(heavy||p.hp<=0?'low':(e&&e.T&&!e.T.wpn?'punch':'hurt')));spark(p.x-e.face*3,p.y-p.z-37,heavy);
  releaseHeld();
  if(p.hp<=0){p.hp=0;if(p.heldBy)releasePlayer();knockP(e.face,2,2.6);return true}
@@ -1320,14 +1322,14 @@ function updBike(e){
  if(!e.hitDone&&Math.abs(P.x-e.x)<15&&Math.abs(P.y-e.y)<6&&P.z<14){if(enemyHitsPlayer(e,12,true))e.hitDone=true}
  if((e.vx>0&&e.x>cam+W+60)||(e.vx<0&&e.x<cam-60)){e.vx=-e.vx;e.face=-e.face;e.hitDone=false;e.rev=150;snd('moto')}
 }
-const GWIND={pound:34,grab:16,drum:22,rush:26,chainsweep:22,press:18,call:24,mg:28,burst:14,retreat:8,swing:28,hook:24,missile:30,cargo:30,hmissile:26};
+const GWIND={pound:34,grab:16,drum:22,rush:26,chainsweep:22,press:18,call:24,mg:28,burst:14,retreat:8,swing:28,hook:24,missile:30,cargo:30,hmissile:26,stretch:22};
 function updGiant(e){
  if(e.flash>0)e.flash--;if(e.muz>0)e.muz--;
  const p=P,A=e.T.atk;
  if(e.st==='dying'){e.t++;
   if(e.t<30){e.x+=e.vx;e.vx*=.94;if(e.t%10===0)snd('hurt')}
   if(e.t===30){e.z=0;shake=9;snd('fall');snd('thud');for(let k=0;k<3;k++)dust(e.x+(k-1)*24,e.y);flashT=3}
-  if(e.T.mech){if(e.t%7===0&&e.t<110){boom(e.x+(Math.random()-.5)*60,e.y-20-Math.random()*90,Math.random()<.4);snd('boom');shake=Math.max(shake,4)}if(e.t===112){for(let k=0;k<6;k++)boom(e.x+(Math.random()-.5)*70,e.y-10-Math.random()*100,true);flashT=8;shake=10;snd('boom')}}
+  if(e.T.mech){const mk=e.T.mk||1;if(e.t%7===0&&e.t<110){boom(e.x+(Math.random()-.5)*60*mk,e.y-(20+Math.random()*90)*mk,Math.random()<.4);snd('boom');shake=Math.max(shake,4)}if(e.t===112){for(let k=0;k<(mk<1?3:6);k++)boom(e.x+(Math.random()-.5)*70*mk,e.y-(10+Math.random()*100)*mk,true);flashT=8;shake=10;snd('boom')}}
   if(e.t>=150){e.remove=true;if(e.type==='grave'&&!e.T.mini&&!S.cs)startCS(e)}
   return}
  if(e.type==='grave'){const n=ents.filter(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o)).length;if(n<2){e.guardT=(e.guardT||0)+1;if(e.guardT>=(e.guarded?70:20)){e.guardT=0;e.guarded=true;const o=spawnEnemy({k:'gun',s:(e.guardSide=!e.guardSide)?'L':'R'});o.cool=40}}else e.guardT=0}
@@ -1355,7 +1357,7 @@ function updGiant(e){
  if(!on)mvx=(e.x<cam+16?1:-1)*sp*1.5;
  e.x+=mvx;e.y=clamp(e.y+mvy,GY0,GY1);
  if(Math.abs(mvx)>.05||Math.abs(mvy)>.05){if(e.st!=='walk'){e.st='walk';e.t=0}e.t++}else{if(e.st!=='idle'){e.st='idle';e.t=0}e.t++}
- if(e.T.mech&&on&&!ents.some(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o))){e.st='wind';e.t=0;e.move='call';e.wdur=GWIND.call;e.face=dx>0?1:-1;return}
+ if(e.T.mech&&!e.T.proto&&on&&!ents.some(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o))){e.st='wind';e.t=0;e.move='call';e.wdur=GWIND.call;e.face=dx>0?1:-1;return}
  if(e.pendCall&&on&&['idle','walk'].includes(e.st)){e.pendCall=false;e.st='wind';e.t=0;e.move='call';e.wdur=GWIND.call;e.face=dx>0?1:-1;return}
  if(e.cool>0){e.cool--;return}
  if(!on||['air','down','getup','held'].includes(p.st)||p.inv>60)return;
@@ -1367,6 +1369,7 @@ function updGiant(e){
   if(m==='call'&&ents.some(o=>o.type==='bike'))m='rush';
   if(m==='call'&&e.type==='mech'&&ents.filter(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o)).length>=2)m='press';
   if(m==='hook'&&(adx<50||adx>170||!aligned))return;
+  if(m==='stretch'&&(adx>110||!aligned))return;
   if(['pound','drum','rush','chainsweep','burst'].includes(m)&&!aligned)return;
   if(m==='chainsweep'&&adx>100)return;
   go(m);
@@ -1415,7 +1418,8 @@ function doMove(e){const p=P,A=e.T.atk;
   case 'call':if(e.type==='mech'&&(e.t===10||e.t===26)){const o=spawnEnemy({k:rpick(e.t===10?['punk','chain','knife','kungfu']:['punk','chain','woman','ninja']),s:'R'});o.x=e.x+e.face*22;o.y=e.y;o.z=88;o.st='leap';o.t=0;o.vz=1.8;o.vx=e.face*1.4;o.vy=(clamp(p.y,GY0,GY1)-e.y)/40;o.face=e.face;snd('jump');for(let k=0;k<4;k++)parts.push({t:'smoke',x:o.x+(Math.random()-.5)*10,y:e.y-88-Math.random()*10,life:20})}
    if(e.t>=(e.type==='mech'?40:24))endMove(e);break;
   case 'missile':if(e.t===2||e.t===10||e.t===18||e.t===26){fx.push({k:'missile',x:e.x-e.face*18,y:e.y,z:122,ph:0,t:0,tx:clamp(p.x+(Math.random()-.5)*50,cam+12,cam+W-12),ty:clamp(p.y+(Math.random()-.5)*18,GY0,GY1)});snd('fire');parts.push({t:'smoke',x:e.x-e.face*18,y:e.y-120,life:24})}if(e.t>=44)endMove(e);break;
-  case 'hmissile':if(e.t===2||e.t===16){fx.push({k:'hmis',x:e.x+e.face*58,y:e.y,z:80,vx:e.face*2.4,t:0});snd('fire');parts.push({t:'smoke',x:e.x+e.face*58,y:e.y-80,life:18})}if(e.t>=34)endMove(e);break;
+  case 'hmissile':{const mk=e.T.mk||1;if(e.t===2||(e.t===16&&!e.T.proto)){fx.push({k:'hmis',x:e.x+e.face*58*mk,y:e.y,z:Math.max(34,80*mk),vx:e.face*2.4,t:0});snd('fire');parts.push({t:'smoke',x:e.x+e.face*58*mk,y:e.y-80*mk,life:18})}if(e.t>=34)endMove(e);break}
+  case 'stretch':{e.ext=e.t<6?e.t*10:(e.t<12?60:Math.max(0,60-(e.t-12)*8));const reach=40+e.ext;if(!e.hitDone&&e.t>=3&&e.t<=11&&inBox(e,p,-10,reach,12)&&enemyHitsPlayer(e,15,true))e.hitDone=true;if(e.t===2)snd('swingH');if(e.t>=22){e.ext=0;endMove(e)}break}
   case 'hook':
    if(e.hooked){if(p.heldBy!==e){e.hooked=false;endMove(e);break}
     const tx=e.x+e.face*24;p.x+=Math.sign(tx-p.x)*Math.min(4,Math.abs(tx-p.x));p.y+=(e.y-p.y)*.2;p.face=-e.face;if(e.t%4===0)snd('chain');
@@ -1585,8 +1589,8 @@ function drawMech(e){
  const air=e.z>0||st==='drop';
  if(st==='walk'){const ph=t/9;ftF=[12+Math.sin(ph)*10,-Math.max(0,Math.cos(ph))*6];ftB=[-14-Math.sin(ph)*10,-Math.max(0,-Math.cos(ph))*6];bob=-Math.abs(Math.sin(ph))*2;fF=[34-Math.sin(ph)*4,-58];fB=[-4+Math.sin(ph)*4,-60]}
  else if(st==='idle'||st==='rec')bob=Math.sin(t*.08)*1;
- if(st==='wind'){if(mv==='pound'){fF=[16,-122];fB=[-2,-120]}else if(mv==='missile'){podGlow=(t>>2)&1;fF=[30,-64]}else if(mv==='rush'){fF=[44,-72];lean=4;jet=(t>>1)&1}else if(mv==='hmissile'){fF=[52,-70];lean=2;podGlow=(t>>2)&1}else if(mv==='press'||mv==='retreat'){bob=6;ftF=[16,0];ftB=[-18,0]}else{fF=[-8,-98];lean=-3}}
- if(st==='atk'){if(mv==='swing'){fF=t<4?[74,-66]:[60,-62];lean=5}else if(mv==='pound'){fF=[44,-10];fB=[24,-12];lean=8;bob=4}else if(mv==='rush'){fF=[50,-70];lean=6;jet=true}else if(mv==='missile'){podGlow=true}else if(mv==='hmissile'){fF=[56,-70];lean=3}else if(mv==='call'){fF=[20,-124]}}
+ if(st==='wind'){if(mv==='pound'){fF=[16,-122];fB=[-2,-120]}else if(mv==='missile'){podGlow=(t>>2)&1;fF=[30,-64]}else if(mv==='rush'){fF=[44,-72];lean=4;jet=(t>>1)&1}else if(mv==='hmissile'){fF=[52,-70];lean=2;podGlow=(t>>2)&1}else if(mv==='stretch'){fF=[10,-72];lean=-4}else if(mv==='press'||mv==='retreat'){bob=6;ftF=[16,0];ftB=[-18,0]}else{fF=[-8,-98];lean=-3}}
+ if(st==='atk'){if(mv==='swing'){fF=t<4?[74,-66]:[60,-62];lean=5}else if(mv==='pound'){fF=[44,-10];fB=[24,-12];lean=8;bob=4}else if(mv==='rush'){fF=[50,-70];lean=6;jet=true}else if(mv==='missile'){podGlow=true}else if(mv==='hmissile'){fF=[56,-70];lean=3}else if(mv==='stretch'){fF=[60,-66];lean=4}else if(mv==='call'){fF=[20,-124]}}
  if(air){ftF=[12,-10];ftB=[-12,-8];jet=true}
  if(st==='stagger'||st==='dying'){lean=-6;fF=[30,-46];fB=[-20,-52];bob=st==='dying'&&t>30?10:3}
  const by=bob,hx=lean;
@@ -1619,9 +1623,11 @@ function drawMech(e){
  const shF=[18+hx,-90+by];mJoint(shF[0],shF[1],10,F);
  g.fillStyle=Y[0];g.fillRect(shF[0]-6,shF[1]-9,12,3);
  el=ik(shF[0],shF[1],fF[0]+hx,fF[1]+by,24,26,1);mLimb(shF[0],shF[1],el[0],el[1],13,F);mJoint(el[0],el[1],6,D);mLimb(el[0],el[1],fF[0]+hx,fF[1]+by,15,F);
+ if(mv==='stretch'&&st==='wind'){fF=[20,-70];}
+ if(mv==='stretch'&&st==='atk'&&e.ext>0){const x0=fF[0]+hx,y0=fF[1]+by;for(let k=0;k<e.ext;k+=10){mBox(x0+k,y0-5,10,10,k%20?D:B)}fF=[fF[0]+e.ext,fF[1]]}
  mBox(fF[0]+hx-9,fF[1]+by-9,19,18,F);g.fillStyle=D[0];g.fillRect(fF[0]+hx+4,fF[1]+by-7,3,14);g.fillStyle=D[2];for(let k=0;k<3;k++)g.fillRect(fF[0]+hx-7,fF[1]+by-5+k*4,10,1);
  // 損傷の火花と煙
- if(st==='stagger'||st==='dying'||e.hp<e.max*.3){if((frame+e.t)%7===0)parts.push({t:'spark',x:e.x+(Math.random()-.5)*40,y:e.y-60-Math.random()*50,life:6,max:6,big:false});if(frame%9===0)parts.push({t:'smoke',x:e.x-e.face*10+(Math.random()-.5)*20,y:e.y-90-Math.random()*20,life:30})}
+ if(st==='stagger'||st==='dying'||e.hp<e.max*.3){if((frame+e.t)%7===0){const mk=e.T.mk||1;parts.push({t:'spark',x:e.x+(Math.random()-.5)*40*mk,y:e.y-(60+Math.random()*50)*mk,life:6,max:6,big:false})}if(frame%9===0){const mk=e.T.mk||1;parts.push({t:'smoke',x:e.x-e.face*10*mk+(Math.random()-.5)*20*mk,y:e.y-(90+Math.random()*20)*mk,life:30})}}
 }
 
 /* ===== グレイヴの部屋（スイートルーム） ===== */
@@ -2033,7 +2039,8 @@ function drawEnt(e){
  if(e.inv>0&&e.st!=='special'&&e.st!=='getup'&&(frame&2))return;
  if(e.st==='dying'&&(isGiant(e)?e.t>100:true)&&(frame&2))return;
  if(e.T&&e.T.mech){if(!mechCv){mechCv=mk(240,196);mechCtx=mechCv.getContext('2d')}const G0=g;g=mechCtx;g.clearRect(0,0,240,196);g.save();g.translate(120,186);drawMech(e);g.restore();g=G0;
-  const K=1.18;g.save();g.translate(sx,gy-Math.round(e.z));if(e.face<0)g.scale(-1,1);g.drawImage(mechCv,Math.round(-120*K),Math.round(-186*K),Math.round(240*K),Math.round(196*K));g.restore();return}
+  if(e.T.tint){mechCtx.globalCompositeOperation='source-atop';mechCtx.fillStyle=e.T.tint;mechCtx.fillRect(0,0,240,196);mechCtx.globalCompositeOperation='source-over'}
+  const K=1.18*(e.T.mk||1);g.save();g.translate(sx,gy-Math.round(e.z));if(e.face<0)g.scale(-1,1);g.drawImage(mechCv,Math.round(-120*K),Math.round(-186*K),Math.round(240*K),Math.round(196*K));g.restore();return}
  const fname=frameOf(e),fr=SPR.sprites[e.spr][fname];if(!fr)return;
  const mode=e.flash>0?'w':(e.glow?'p':'');
  const c=frameCanvas(e.spr,e.pal,fname,mode);
