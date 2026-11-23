@@ -879,7 +879,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 15時00分版';
+const BUILD='11月23日 15時05分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1837,11 +1837,8 @@ function updCS(){
  // ジンが駆けつける
  if(c.blastAt&&t>=c.blastAt+50&&c.K&&c.K.fr==='down'&&!c.knelt){c.run=1;const tx=c.K.x-dir*16;p.face=Math.sign(c.K.x-p.x)||dir;if(csMove(p,tx,c.K.y,2.2)){c.knelt=t;p.fr='pick';p.face=Math.sign(c.K.x-p.x)||dir}else p.fr='walk'+(((t/5)|0)%4)}
  if(c.knelt){const k=t-c.knelt;
-  if(k===20)csCap('ジン「カイン！　しっかりしろ！」');
-  if(k===130)csCap('カイン「……ふん……借りは……返したぜ……」');
   if(k===250){csCap('');c.K.flash=0;c.dim=1}
   if(k>250&&k<330)c.dimA=Math.min(.35,(k-250)/80*.35);
-  if(k===290)csCap('ジン「カイーン！」');
   if(k===400){csCap('');c.done=true;c.K.remove=true;G.remove=true;p.fr=null;p.inv=60;playMusic('title')}}
 }
 function csBlast(x,y,z){const c=S.cs;c.blastAt=c.t;c.blastT=1;boom(x,y-z,true);boom(x-8,y-z+4,false);boom(x+8,y-z-4,false);snd('boom');shake=9;flashT=5;hitstop=8;playMusic('_mute');
