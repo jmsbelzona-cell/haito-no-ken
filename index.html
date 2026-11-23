@@ -240,7 +240,7 @@ const ETYPES={
  anchorL:{spr:'anchor',pal:'anchorL',base:'anchor',mini:1,sc:1.5,hp:240,sp:.55,pts:8000,giant:1,rad:11,moves:['hook','chainsweep','cargo','drum','hook','cargo'],atk:{wind:28,act:8,rec:28,r0:0,range:46,dmg:16},names:['ケッジ']},
  brute:{spr:'brute',hp:120,sp:.55,pts:2000,big:1,atk:{wind:28,act:8,rec:28,r0:4,range:36,dmg:14,heavy:1}},
  hammer:{spr:'hammer',sc:1.5,hp:400,sp:.5,pts:30000,giant:1,rad:11,moves:['pound','grab','drum'],atk:{wind:30,act:8,rec:30,r0:0,range:46,dmg:16},names:['ハンマー']},
- bull:{spr:'bull',sc:1.5,hp:440,sp:.62,pts:40000,giant:1,rad:11,moves:['rush','chainsweep','press','call'],atk:{wind:28,act:8,rec:26,r0:0,range:46,dmg:16},names:['ブル']},
+ bull:{spr:'bull',sc:1.5,hp:440,sp:.62,pts:40000,giant:1,rad:11,barCall:1,moves:['rush','chainsweep','press'],atk:{wind:28,act:8,rec:26,r0:0,range:46,dmg:16},names:['ブル']},
  anchor:{spr:'anchor',sc:1.5,hp:480,sp:.55,pts:45000,giant:1,rad:11,moves:['hook','chainsweep','cargo','drum','hook','cargo'],atk:{wind:28,act:8,rec:28,r0:0,range:46,dmg:16},names:['アンカー']},
  mech:{spr:'titan',mech:1,sc:3,hp:520,sp:.5,pts:60000,giant:1,rad:22,moves:['missile','hmissile','rush','pound','hmissile','press','missile'],atk:{wind:26,act:8,rec:28,r0:0,range:72,dmg:18},names:['ゴリアテ']},
  rival:{spr:'rival',hp:300,sp:1.3,pts:50000,rival:1,atk:{wind:0,act:0,rec:18,r0:0,range:24,dmg:6},names:['カイン']},
@@ -879,7 +879,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 10時05分版';
+const BUILD='11月23日 10時15分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1078,6 +1078,7 @@ function hurtEnemy(e,dmg,kind,dir,kb){
   e.hp-=dmg;e.flash=3;score+=dmg*10;setEnemyHud(e);
   const heavy=kind==='heavy';spark(P.x+P.face*16,P.y-P.z-34,heavy);hitstop=heavy?5:2;shake=heavy?3:1;snd(e.T.mech?'drumS':(e.hp<=0?hitSndOf(true):(hitSnd==='punchH'?'low':hitSnd||(heavy?'heavy':'hit'))));
   if(e.hp<=0){giantDie(e);return}
+  if(e.T.barCall&&Math.ceil(e.hp/HPU)<Math.ceil((e.hp+dmg)/HPU))e.pendCall=true;
   e.stg+=dmg;if(e.stg>=70&&e.st!=='stagger'){e.stg=0;e.st='stagger';e.t=0;e.glow=0}
   return;
  }
@@ -1302,7 +1303,7 @@ function spawnEnemy(o){
  if(o.s==='D'&&S.doors&&!T.giant){const cand=S.doors.filter(d=>d.x>cam+24&&d.x<cam+W-24);if(cand.length){const d=rpick(cand);d.open=80;e.x=d.x;e.y=d.bot;e.st='emerge';e.t=0;e.face=P.x>=d.x?1:-1;snd('door')}else{e.x=S.th.rev?cam-26:cam+W+26;e.face=S.th.rev?1:-1}}
  if(o.s==='F'){if(S.shaft&&!T.giant){const db=Math.round(S.ev%S.TL)+78;e.x=cam+128+Math.random()*66;e.y=GY0+2;e.z=e.y-db;e.st='perch';e.t=14;e.face=P.x>=e.x?1:-1;snd('door')}else o.s='A'}
  if(o.s==='A'){e.x=T.giant?cam+W*.68:cam+30+Math.random()*(W-60);e.y=T.giant?(GY0+GY1)/2:GY0+4+Math.random()*(GY1-GY0-8);e.z=T.giant?150:120;e.vz=0;e.st='drop';e.t=0;e.face=P.x>=e.x?1:-1;snd('jump')}
- if(o.k==='bike'){e.y=clamp(P.y,GY0,GY1);e.st='ride';e.vx=-side*T.sp;e.x=side<0?cam-40:cam+W+40;snd('moto')}
+ if(o.k==='bike'){e.y=clamp(P.y,GY0,GY1);e.st='ride';e.vx=-side*T.sp;e.x=side<0?cam-40:cam+W+40;e.rev=150;snd('moto')}
  ents.push(e);
  if(o.msg)showMsg(o.msg,170);
  if(T.giant&&!T.mini){playMusic(BOSSMUS[o.k]||'boss');setEnemyHud(e)}
@@ -1311,10 +1312,10 @@ function spawnEnemy(o){
 }
 function clampE(e){e.y=clamp(e.y,GY0,GY1);e.x=clamp(e.x,cam-40,cam+W+40)}
 function updBike(e){
- e.t++;e.x+=e.vx;
+ e.t++;if(e.rev>0){e.rev--;e.x=e.vx>0?cam-40:cam+W+40;if(e.rev===0)e.y=clamp(P.y,GY0,GY1);return}e.x+=e.vx;
  if(e.t%3===0)parts.push({t:'smoke',x:e.x-e.face*16,y:e.y-6,life:20});
  if(!e.hitDone&&Math.abs(P.x-e.x)<15&&Math.abs(P.y-e.y)<6&&P.z<14){if(enemyHitsPlayer(e,12,true))e.hitDone=true}
- if((e.vx>0&&e.x>cam+W+60)||(e.vx<0&&e.x<cam-60)){e.vx=-e.vx;e.face=-e.face;e.hitDone=false;e.y=clamp(P.y+(Math.random()-.5)*10,GY0,GY1);snd('moto')}
+ if((e.vx>0&&e.x>cam+W+60)||(e.vx<0&&e.x<cam-60)){e.vx=-e.vx;e.face=-e.face;e.hitDone=false;e.rev=150;snd('moto')}
 }
 const GWIND={pound:34,grab:16,drum:22,rush:26,chainsweep:22,press:18,call:24,mg:28,burst:14,retreat:8,swing:28,hook:24,missile:30,cargo:30,hmissile:26};
 function updGiant(e){
@@ -1352,6 +1353,7 @@ function updGiant(e){
  e.x+=mvx;e.y=clamp(e.y+mvy,GY0,GY1);
  if(Math.abs(mvx)>.05||Math.abs(mvy)>.05){if(e.st!=='walk'){e.st='walk';e.t=0}e.t++}else{if(e.st!=='idle'){e.st='idle';e.t=0}e.t++}
  if(e.T.mech&&on&&!ents.some(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o))){e.st='wind';e.t=0;e.move='call';e.wdur=GWIND.call;e.face=dx>0?1:-1;return}
+ if(e.pendCall&&on&&['idle','walk'].includes(e.st)){e.pendCall=false;e.st='wind';e.t=0;e.move='call';e.wdur=GWIND.call;e.face=dx>0?1:-1;return}
  if(e.cool>0){e.cool--;return}
  if(!on||['air','down','getup','held'].includes(p.st)||p.inv>60)return;
  const go=(m)=>{e.st='wind';e.t=0;e.move=m;e.wdur=GWIND[m];e.face=dx>0?1:-1};
@@ -1375,7 +1377,7 @@ function startMove(e){const p=P;e.aoeT=new Set();
   case 'press':{const T=46;e.vz=4.2;e.vx=(p.x-e.x)/T;e.vy=(p.y-e.y)/T;fx.push({k:'marker',x:p.x,y:p.y,t:0,T});snd('jump');break}
   case 'rush':e.passes=0;snd('bike');break;
   case 'retreat':e.vz=3;e.vx=-e.face*3;snd('jump');break;
-  case 'call':if(e.type==='mech'){snd('door')}else{spawnEnemy({k:'bike',s:'R'});spawnEnemy({k:'bike',s:'L'})}break;
+  case 'call':if(e.type==='mech'){snd('door')}else{const nb=ents.filter(o=>o.type==='bike'&&!o.dead).length;if(nb<3)spawnEnemy({k:'bike',s:'R'});if(nb<2)spawnEnemy({k:'bike',s:'L'})}break;
   case 'missile':break;
   case 'hmissile':break;
   case 'hook':snd('chain');e.hooked=false;fx.push({k:'hook',x:e.x+e.face*22,y:e.y,vx:e.face*5.2,t:0,owner:e});break;
