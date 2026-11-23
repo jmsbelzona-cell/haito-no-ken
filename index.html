@@ -879,7 +879,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 10時00分版';
+const BUILD='11月23日 10時05分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1737,11 +1737,14 @@ function updFx(){
    if(hit||out){f.dead=true;const d=(f.dur||1)-(hit?1:0);
     if(d>0)ents.push({kind:'weapon',type:f.type,dur:d,x:clamp(f.x-(hit?Math.sign(f.vx)*8:0),cam+12,cam+W-12),y:f.y,z:0,t:0});
     else for(let i=0;i<6;i++)parts.push({t:'deb',x:f.x,y:f.y,z:f.z,vx:(Math.random()-.5)*2.5,vz:1+Math.random()*2,col:'#c0c8d0',life:40})}}
-  else if(f.k==='wreck'){f.x+=f.vx;f.vx*=.92;if(f.t%(f.t>20?2:4)===0)parts.push({t:'smoke',x:f.x+(Math.random()-.5)*10,y:f.y-8,life:24});
-   if(f.t===50){f.dead=true;boom(f.x,f.y-6,true);boom(f.x-10,f.y-2,false);boom(f.x+10,f.y-4,false);snd('boom');shake=Math.max(shake,7);flashT=3;
-    for(let i=0;i<12;i++)parts.push({t:'deb',x:f.x,y:f.y,z:6,vx:(Math.random()-.5)*4,vz:1.5+Math.random()*3,col:rpick(['#c8302a','#2a2a2e','#9aa4b4','#ffd23a']),life:50});
-    AOEMINI=false;aoe(o=>Math.hypot(o.x-f.x,(o.y-f.y)*2)<30,12,o=>o.x>=f.x?1:-1,null,true);
-    if(Math.hypot(P.x-f.x,(P.y-f.y)*2)<30&&P.z<16)enemyHitsPlayer({face:P.x>=f.x?1:-1},12,true)}}
+  else if(f.k==='wreck'){f.x+=f.vx;f.vx*=.92;
+   if(f.t<90){if(f.t%(f.t>45?2:4)===0)parts.push({t:'smoke',x:f.x+(Math.random()-.5)*10,y:f.y-8,life:24})}
+   else{const bt=f.t-90;if(bt===0){boom(f.x,f.y-6,true);snd('boom');shake=Math.max(shake,7);flashT=3;f.tag=new Set();f.pHit=false;
+     for(let i=0;i<12;i++)parts.push({t:'deb',x:f.x,y:f.y,z:6,vx:(Math.random()-.5)*4,vz:1.5+Math.random()*3,col:rpick(['#c8302a','#2a2a2e','#9aa4b4','#ffd23a']),life:50})}
+    else if(bt%10===0&&bt<110){boom(f.x+(Math.random()-.5)*24,f.y-2-Math.random()*8,Math.random()<.4);if(bt%30===0)snd('boom');shake=Math.max(shake,2)}
+    AOEMINI=false;aoe(o=>Math.hypot(o.x-f.x,(o.y-f.y)*2)<30,12,o=>o.x>=f.x?1:-1,f.tag,true);
+    if(!f.pHit&&Math.hypot(P.x-f.x,(P.y-f.y)*2)<30&&P.z<16&&enemyHitsPlayer({face:P.x>=f.x?1:-1},12,true))f.pHit=true;
+    if(bt>=120)f.dead=true}}
  }
  fx=fx.filter(f=>!f.dead);
 }
@@ -1764,7 +1767,7 @@ function drawFxGround(){
   else if(f.k==='missile'&&f.ph===1){if((f.t>>2)&1)ring(f.x-cam,f.y,12,3,'#ff3030','#ffb0a0')}
   else if(f.k==='marker'){if((f.t>>2)&1)ring(f.x-cam,f.y,14,4,'#ff3030','#ffb0a0')}
   else if(f.k==='cargo'){if((f.t>>2)&1)ring(f.tx-cam,f.ty,14,4,'#ff3030','#ffb0a0');const x=Math.round(f.x-cam),y=Math.round(f.y);g.globalAlpha=.35;pellipse(g,x,y,10,2,'#000000');g.globalAlpha=1;drawCargo(x,Math.round(y-f.z))}
-  else if(f.k==='wreck'){drawBikeAt(Math.round(f.x-cam),Math.round(f.y),f.face,true);if(f.t>24&&(f.t>>(f.t>38?1:2))&1){g.globalAlpha=.6;g.fillStyle='#ff5a2a';g.fillRect(Math.round(f.x-cam)-14,Math.round(f.y)-15,28,8);g.globalAlpha=1}}
+  else if(f.k==='wreck'){if(f.t<90)drawBikeAt(Math.round(f.x-cam),Math.round(f.y),f.face,true);if(f.t>45&&f.t<90&&(f.t>>(f.t>70?1:2))&1){g.globalAlpha=.6;g.fillStyle='#ff5a2a';g.fillRect(Math.round(f.x-cam)-14,Math.round(f.y)-15,28,8);g.globalAlpha=1}}
  }
 }
 function drawChainLine(x0,y0,x1,y1){const n=Math.max(1,Math.hypot(x1-x0,y1-y0)/3|0);for(let k=0;k<=n;k++){const x=Math.round(x0+(x1-x0)*k/n),y=Math.round(y0+(y1-y0)*k/n);g.fillStyle='#0c0810';g.fillRect(x-1,y-1,3,3);g.fillStyle=k&1?'#c0c8d0':'#7a8290';g.fillRect(x,y,1+(k&1),1)}}
