@@ -879,7 +879,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 14時20分版';
+const BUILD='11月23日 15時00分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1325,7 +1325,7 @@ function updGiant(e){
   if(e.t<30){e.x+=e.vx;e.vx*=.94;if(e.t%10===0)snd('hurt')}
   if(e.t===30){e.z=0;shake=9;snd('fall');snd('thud');for(let k=0;k<3;k++)dust(e.x+(k-1)*24,e.y);flashT=3}
   if(e.T.mech){if(e.t%7===0&&e.t<110){boom(e.x+(Math.random()-.5)*60,e.y-20-Math.random()*90,Math.random()<.4);snd('boom');shake=Math.max(shake,4)}if(e.t===112){for(let k=0;k<6;k++)boom(e.x+(Math.random()-.5)*70,e.y-10-Math.random()*100,true);flashT=8;shake=10;snd('boom')}}
-  if(e.t>=150)e.remove=true;
+  if(e.t>=150){e.remove=true;if(e.type==='grave'&&!e.T.mini&&!S.cs)startCS(e)}
   return}
  if(e.type==='grave'){const n=ents.filter(o=>o.kind==='enemy'&&!o.dead&&!isGiant(o)).length;if(n<2){e.guardT=(e.guardT||0)+1;if(e.guardT>=(e.guarded?70:20)){e.guardT=0;e.guarded=true;const o=spawnEnemy({k:'gun',s:(e.guardSide=!e.guardSide)?'L':'R'});o.cool=40}}else e.guardT=0}
  if(e.st==='grabbed')return;
@@ -1801,7 +1801,60 @@ function updCamera(){
   if(has&&(rv?cam<=wc(S.waves[waveI].at):cam>=S.waves[waveI].at)){cam=wc(S.waves[waveI].at);lock=true;waveT=0;goT=0;if(S.th.dropItems)for(const di of S.th.dropItems)if(di[0]===waveI){const bx=cam+40+Math.random()*(W-80),by=GY0+Math.random()*(GY1-GY0);ents.push({kind:'barrel',x:bx,y:by,z:0,item:di[1]});dust(bx,by)}spawnQ=S.waves[waveI].en.map(o=>Object.assign({},o,{d:o.d||0,done:false}))}
  }
 }
+/* ===== グレイブ撃破後の演出 ===== */
+function csCap(t){capEl.style.display=t?'block':'none';capEl.innerHTML=t?'<span>'+t+'</span>':''}
+function startCS(ge){
+ const p=P,dir=ge.x>=p.x?1:-1;
+ const G={kind:'actor',type:'grave',T:ETYPES.grave,spr:'grave',pal:ge.pal,sc:ge.sc,x:clamp(ge.x,cam+150,cam+W-40)*(dir>0?1:0)+clamp(ge.x,cam+40,cam+W-150)*(dir>0?0:1),y:ge.y,z:0,face:-dir,st:'idle',t:0,fr:'down',flash:0,inv:0};
+ const Jx=clamp(G.x-dir*110,cam+50,cam+W-50);
+ S.cs={t:0,dir,G,K:null,gr:null,Jx,Jy:clamp(ge.y,GY0,GY1)};
+ ents.push(G);p.st='idle';p.t=0;p.inv=0;p.vx=0;p.z=0;p.held=null;p.heldBy=null;enemyHudT=0;
+}
+function csMove(a,tx,ty,sp){const dx=tx-a.x,dy=ty-a.y,d=Math.hypot(dx,dy);if(d<=sp){a.x=tx;a.y=ty;return true}a.x+=dx/d*sp;a.y+=dy/d*sp;return false}
+function updCS(){
+ const c=S.cs,p=P,G=c.G,dir=c.dir;c.t++;const t=c.t;p.inv=0;p.hp=Math.max(p.hp,1);for(const a of [G,c.K])if(a&&a.flash>0)a.flash--;
+ // ジンの立ち位置
+ if(t<60&&!c.jd){p.face=dir;if(csMove(p,c.Jx,c.Jy,1.4)){c.jd=1;p.fr='idle0'}else p.fr='walk'+(((t/6)|0)%4)}
+ // グレイブが起き上がる
+ if(t===60){G.fr='crouch';snd('fall')}
+ if(t===82)G.fr='idle0';
+ if(t===100){G.fr='raise';c.hold=1;snd('catch')}
+ if(t===124){G.fr='smash';c.hold=0;snd('swingH');const sx=G.x+G.face*14,tx=p.x+dir*6;c.gr={x0:sx,y0:G.y,x:sx,y:G.y,z:70,tx,ty:p.y,T:56,t:0}}
+ if(t===150)G.fr='idle0';
+ // 手榴弾
+ if(c.gr&&!c.gr.boom){const q=c.gr;q.t++;const u=Math.min(1,q.t/q.T);q.x=q.x0+(q.tx-q.x0)*u;q.y=q.y0+(q.ty-q.y0)*u;q.z=70*(1-u)+40*4*u*(1-u);
+  if(c.K&&c.K.leap&&Math.abs(c.K.x-q.x)<10&&q.z<c.K.z+50){q.boom=1;csBlast(q.x,q.y,q.z)}}
+ // カインが割り込む
+ if(t===100){const kx=dir>0?cam-20:cam+W+20;c.K={kind:'actor',type:'rival',T:ETYPES.rival,spr:'rival',pal:makePal('rival'),sc:1,x:kx,y:p.y+2,z:0,face:dir,st:'idle',t:0,fr:'walk0',flash:0,inv:0,vz:0};ents.push(c.K);snd('jump')}
+ if(c.K&&!c.K.hit){const K=c.K;K.t++;
+  if(!K.leap){K.fr='walk'+(((K.t/4)|0)%4);K.x+=dir*4.2;if(K.t%5===0)dust(K.x-dir*6,K.y);if((K.x-p.x)*dir>-30&&t>=150){K.leap=1;K.vz=2.6;K.fr='jump';snd('jump')}}
+  else{K.x+=dir*2.2;K.z+=K.vz;K.vz-=.12;if(K.z<0)K.z=0}}
+ if(c.K&&c.K.hit){const K=c.K;if(K.z>0||K.vz>0){K.x-=dir*1.4;K.z+=K.vz;K.vz-=.18;if(K.z<=0){K.z=0;K.vz=0;K.fr='down';snd('fall');dust(K.x,K.y);shake=4}}}
+ // 手榴弾がジンに届いてしまう場合の保険
+ if(c.gr&&!c.gr.boom&&c.gr.t>=c.gr.T){c.gr.boom=1;csBlast(c.gr.x,c.gr.y,0)}
+ if(c.blastT){c.blastT++;if(c.blastT<20)p.fr='hurt';else if(!c.run)p.fr='idle0'}
+ if(t===c.blastAt+30&&c.blastAt){G.fr='down';snd('fall');dust(G.x,G.y)}
+ // ジンが駆けつける
+ if(c.blastAt&&t>=c.blastAt+50&&c.K&&c.K.fr==='down'&&!c.knelt){c.run=1;const tx=c.K.x-dir*16;p.face=Math.sign(c.K.x-p.x)||dir;if(csMove(p,tx,c.K.y,2.2)){c.knelt=t;p.fr='pick';p.face=Math.sign(c.K.x-p.x)||dir}else p.fr='walk'+(((t/5)|0)%4)}
+ if(c.knelt){const k=t-c.knelt;
+  if(k===20)csCap('ジン「カイン！　しっかりしろ！」');
+  if(k===130)csCap('カイン「……ふん……借りは……返したぜ……」');
+  if(k===250){csCap('');c.K.flash=0;c.dim=1}
+  if(k>250&&k<330)c.dimA=Math.min(.35,(k-250)/80*.35);
+  if(k===290)csCap('ジン「カイーン！」');
+  if(k===400){csCap('');c.done=true;c.K.remove=true;G.remove=true;p.fr=null;p.inv=60;playMusic('title')}}
+}
+function csBlast(x,y,z){const c=S.cs;c.blastAt=c.t;c.blastT=1;boom(x,y-z,true);boom(x-8,y-z+4,false);boom(x+8,y-z-4,false);snd('boom');shake=9;flashT=5;hitstop=8;playMusic('_mute');
+ if(c.K){c.K.hit=1;c.K.fr='hurt';c.K.vz=2.2;c.K.z=Math.max(c.K.z,6);c.K.flash=8}
+ P.x-=c.dir*6}
+function drawCS(){const c=S.cs;
+ if(c.hold){const G=c.G,x=Math.round(G.x-cam+G.face*2),y=Math.round(G.y-86);csGren(x,y)}
+ if(c.gr&&!c.gr.boom){const q=c.gr;g.globalAlpha=.3;pellipse(g,Math.round(q.x-cam),Math.round(q.y),4,1,'#000000');g.globalAlpha=1;csGren(Math.round(q.x-cam),Math.round(q.y-q.z))}
+ if(c.dimA){g.globalAlpha=c.dimA;g.fillStyle='#000000';g.fillRect(0,0,W,H);g.globalAlpha=1}}
+function csGren(x,y){g.fillStyle='#0c0810';g.fillRect(x-3,y-3,7,8);g.fillStyle='#3a5a2a';g.fillRect(x-2,y-2,5,6);g.fillStyle='#5a7a3a';g.fillRect(x-2,y-2,2,2);g.fillStyle='#8a8e96';g.fillRect(x-1,y-5,3,2);g.fillStyle='#c0c8d0';g.fillRect(x+2,y-6,2,1)}
 function updWaves(){
+ if(S.cs&&!S.cs.done)return;
+ if(stageIdx===LAST&&!S.cs&&ents.some(e=>e.kind==='enemy'&&e.type==='grave'&&!e.T.mini&&e.dead&&!e.remove))return;
  if(!lock)return;
  waveT++;
  if(ents.some(e=>e.kind==='enemy'&&isGiant(e)&&!e.T.mini&&e.dead))for(const q of spawnQ)q.done=true;
@@ -1856,7 +1909,7 @@ function update(){
  if(flashT>0)flashT--;
  if(shake>0)shake=Math.max(0,shake-.3);
  if(hitstop>0){hitstop--;return}
- if(S.enterT>0)updEnter();else updPlayer();if(mode!=='play')return;
+ if(S.enterT>0)updEnter();else if(S.cs&&!S.cs.done)updCS();else updPlayer();if(mode!=='play')return;
  for(const e of ents){if(e.kind==='enemy')updEnemy(e);else if(e.kind==='item'||e.kind==='weapon'||e.kind==='npc')e.t++}
  ents=ents.filter(e=>!e.remove);
  updFx();updCamera();updWaves();updBossCrew();updParts();updDoors();
@@ -1888,6 +1941,7 @@ function updHud(){
 
 /* ===== キャラ描画 ===== */
 function frameOf(e){
+ if(e.fr)return e.fr;
  const st=e.st,t=e.t;
  if(e.kind==='npc'){if(st==='tied')return 'tied';if(st==='cheer')return (t>>4)&1?'cheer':'mstand';return 'mstand'}
  if(e.kind==='hero'){
@@ -2055,7 +2109,7 @@ function render(){
  const list=ents.filter(e=>!e.remove);if(P)list.push(P);list.sort((a,b)=>a.y-b.y);
  for(const e of list){if(e.kind==='barrel')drawBarrel(e);else if(e.kind==='item')drawItem(e);else if(e.kind==='weapon')drawWeaponItem(e);else drawEnt(e)}
  if(P&&P.st==='special')drawSpecialFx();
- drawFxAir();
+ drawFxAir();if(S&&S.cs&&!S.cs.done)drawCS();
  drawParts();
  if(S.th.rain)drawRain();
  if(S.shaft&&S.travelT>0&&mode==='play'&&((frame>>4)&1)){for(let pass=0;pass<2;pass++){g.fillStyle=pass?'#ffd23a':'#1a0a10';for(let i=0;i<9;i++)g.fillRect(W/2-i+(pass?0:1),24+i+(pass?0:1),i*2+1,1);g.fillRect(W/2-3+(pass?0:1),33+(pass?0:1),7,8)}}
