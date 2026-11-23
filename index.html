@@ -881,7 +881,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 15時30分版';
+const BUILD='11月23日 16時50分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}]))+helpHTML();
 }
@@ -1314,7 +1314,7 @@ function spawnEnemy(o){
 }
 function clampE(e){e.y=clamp(e.y,GY0,GY1);e.x=clamp(e.x,cam-40,cam+W+40)}
 function updBike(e){
- e.t++;if(e.rev>0){e.rev--;e.x=e.vx>0?cam-40:cam+W+40;if(e.rev===0)e.y=clamp(P.y,GY0,GY1);return}e.x+=e.vx;
+ e.t++;if(e.rev>0){e.rev--;e.face=e.vx>0?1:-1;e.x=(e.vx>0?cam-6:cam+W+6)+((e.t>>1)&1);if(e.t%4===0)parts.push({t:'smoke',x:e.x-e.face*16,y:e.y-6,life:20});e.y=clamp(e.y+clamp(P.y-e.y,-.6,.6),GY0,GY1);if(e.rev===0){e.x=e.vx>0?cam-6:cam+W+6}return}e.x+=e.vx;
  if(e.t%3===0)parts.push({t:'smoke',x:e.x-e.face*16,y:e.y-6,life:20});
  if(!e.hitDone&&Math.abs(P.x-e.x)<15&&Math.abs(P.y-e.y)<6&&P.z<14){if(enemyHitsPlayer(e,12,true))e.hitDone=true}
  if((e.vx>0&&e.x>cam+W+60)||(e.vx<0&&e.x<cam-60)){e.vx=-e.vx;e.face=-e.face;e.hitDone=false;e.rev=150;snd('moto')}
@@ -1422,9 +1422,9 @@ function doMove(e){const p=P,A=e.T.atk;
    else if(!fx.some(f=>f.k==='hook'&&f.owner===e)&&e.t>8)endMove(e);
    break;
   case 'mg':{const dur=e.hp<e.max/2?130:90;
-   if(e.t%4===1){const vy=Math.sin(e.t*.11)*.9;fx.push({k:'bullet',x:e.x+e.face*30,y:e.y,vx:e.face*5.5,vy,t:0,dmg:5,kd:1});if(e.t%8===1)snd('mg');e.muz=2}
+   if(e.t%4===1){const vy=Math.sin(e.t*.11)*.9;fx.push({k:'bullet',x:e.x+e.face*56,y:e.y,h:60,vx:e.face*5.5,vy,t:0,dmg:5,kd:1});if(e.t%8===1)snd('mg');e.muz=2}
    e.x-=e.face*.25;if(e.t>=dur)endMove(e);break}
-  case 'burst':if(e.t===1||e.t===7||e.t===13){const d=Math.max(20,Math.abs(p.x-e.x));fx.push({k:'bullet',x:e.x+e.face*30,y:e.y,vx:e.face*5.5,vy:(p.y-e.y)/(d/5.5),t:0,kd:1});snd('shot');e.muz=2}if(e.t>=20)endMove(e);break;
+  case 'burst':if(e.t===1||e.t===7||e.t===13){const d=Math.max(20,Math.abs(p.x-e.x));fx.push({k:'bullet',x:e.x+e.face*56,y:e.y,h:60,vx:e.face*5.5,vy:(p.y-e.y)/(d/5.5),t:0,kd:1});snd('shot');e.muz=2}if(e.t>=20)endMove(e);break;
   case 'retreat':e.x+=e.vx;e.z+=e.vz;e.vz-=.2;if(e.z<=0&&e.t>3){e.z=0;dust(e.x,e.y);snd('thud');e.st='wind';e.t=0;e.move='mg';e.wdur=14;e.face=p.x>=e.x?1:-1}break;
  }
 }
@@ -1789,7 +1789,7 @@ function drawFxAir(){
   g.globalAlpha=.3;pellipse(g,x,Math.round(f.y),5,1,'#000000');g.globalAlpha=1;
   if(f.type==='knife'){g.fillStyle='#0c0810';g.fillRect(x-6,y-2,13,4);g.fillStyle='#5a3a1a';g.fillRect(d>0?x-5:x+2,y-1,4,2);g.fillStyle='#e6e9ef';g.fillRect(d>0?x-1:x-5,y-1,7,2);g.fillStyle='#ffffff';g.fillRect(d>0?x:x-4,y-1,5,1);g.globalAlpha=.4;g.fillStyle='#ffffff';g.fillRect(d>0?x-14:x+7,y,8,1);g.globalAlpha=1}
   else{const a=f.t*.45,len=f.type==='pipe'?11:7,c=Math.cos(a)*len,s2=Math.sin(a)*len;pline(g,x-c,y-s2,x+c,y+s2,'#0c0810',4);pline(g,x-c+1,y-s2+1,x+c+1,y+s2+1,f.type==='pipe'?'#a8acb4':'#c8884a',2)}}
- for(const f of fx)if(f.k==='bullet'){const x=Math.round(f.x-cam),y=Math.round(f.y-31);g.fillStyle='#ffd23a';g.fillRect(x-3,y,6,1);g.fillStyle='#ffffff';g.fillRect(x+(f.vx>0?1:-2),y,2,1);g.globalAlpha=.4;g.fillStyle='#ff9a3a';g.fillRect(x-(f.vx>0?9:-3),y,6,1);g.globalAlpha=1}
+ for(const f of fx)if(f.k==='bullet'){const x=Math.round(f.x-cam),y=Math.round(f.y-(f.h||40));g.fillStyle='#ffd23a';g.fillRect(x-3,y,6,1);g.fillStyle='#ffffff';g.fillRect(x+(f.vx>0?1:-2),y,2,1);g.globalAlpha=.4;g.fillStyle='#ff9a3a';g.fillRect(x-(f.vx>0?9:-3),y,6,1);g.globalAlpha=1}
 }
 
 /* ===== 進行 ===== */
