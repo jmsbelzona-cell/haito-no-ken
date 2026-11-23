@@ -881,7 +881,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 15時20分版';
+const BUILD='11月23日 15時30分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}]))+helpHTML();
 }
@@ -1837,11 +1837,9 @@ function updCS(){
  if(t===c.blastAt+30&&c.blastAt){G.fr='down';snd('fall');dust(G.x,G.y)}
  // ジンが駆けつける
  if(c.blastAt&&t>=c.blastAt+50&&c.K&&c.K.fr==='down'&&!c.knelt){c.run=1;const tx=c.K.x-dir*16;p.face=Math.sign(c.K.x-p.x)||dir;if(csMove(p,tx,c.K.y,2.2)){c.knelt=t;p.fr='pick';p.face=Math.sign(c.K.x-p.x)||dir}else p.fr='walk'+(((t/5)|0)%4)}
- if(c.knelt){const k=t-c.knelt;
-  if(k===250){csCap('');c.K.flash=0;c.dim=1}
-  if(k>250&&k<330)c.dimA=Math.min(.35,(k-250)/80*.35);
-  if(k===400){csCap('');c.done=true;c.K.remove=true;G.remove=true;p.fr=null;p.inv=60;playMusic('title')}}
+ if(c.knelt&&!c.done){c.done=true;c.keep=true;c.kt=0;p.fr='pick';p.st='idle'}
 }
+function updCSKeep(){const c=S.cs,p=P;c.kt++;p.fr='pick';p.st='idle';p.inv=0;p.vx=0;if(c.kt>60)c.dimA=Math.min(.35,(c.kt-60)/120*.35)}
 function csBlast(x,y,z){const c=S.cs;c.blastAt=c.t;c.blastT=1;boom(x,y-z,true);boom(x-8,y-z+4,false);boom(x+8,y-z-4,false);snd('boom');shake=9;flashT=5;hitstop=8;playMusic('_mute');
  if(c.K){c.K.hit=1;c.K.fr='hurt';c.K.vz=2.2;c.K.z=Math.max(c.K.z,6);c.K.flash=8}
  P.x-=c.dir*6}
@@ -1859,8 +1857,8 @@ function updWaves(){
  for(const q of spawnQ)if(!q.done&&waveT>=q.d){q.done=true;spawnEnemy(q)}
  const alive=ents.some(e=>e.kind==='enemy'&&!e.dead);
  if(!spawnQ.some(q=>!q.done)&&!alive&&waveT>30){lock=false;waveI++;
-  if(waveI>=S.waves.length){clearT=stageIdx===LAST?320:230;clearT+=80;{const k=S.kills||0,hb=Math.max(0,Math.round(P.hp))*100,kb=k*200,nb=stageDied?0:10000,s0=score;score+=hb+kb+nb;saveHi();S.tally={t:0,s0,lines:['体力ボーナス　'+hb,'討伐ボーナス　'+k+'人×200＝'+kb,'ノーミスボーナス　'+(stageDied?'なし':nb)],tot:hb+kb+nb};tallyEl.innerHTML='';tallyEl.style.display='block'}showMsg(stageIdx===LAST?'デッドエンド団　壊滅！':('第'+(stageIdx+1)+'区　突破！'),220);playMusic('title');
-   if(stageIdx===LAST){mika={kind:'npc',spr:'mika',pal:Object.assign({},BASEPAL,PALS.mika,{id:'mika'}),sc:1,x:cam+W-50,y:150,z:0,face:-1,st:'tied',t:0,T:{}};ents.push(mika)}}
+  if(waveI>=S.waves.length){clearT=stageIdx===LAST?320:230;clearT+=80;{const k=S.kills||0,hb=Math.max(0,Math.round(P.hp))*100,kb=k*200,nb=stageDied?0:10000,s0=score;score+=hb+kb+nb;saveHi();S.tally={t:0,s0,lines:['体力ボーナス　'+hb,'討伐ボーナス　'+k+'人×200＝'+kb,'ノーミスボーナス　'+(stageDied?'なし':nb)],tot:hb+kb+nb};tallyEl.innerHTML='';tallyEl.style.display='block'}showMsg(stageIdx===LAST?'デッドエンド団　壊滅！':('第'+(stageIdx+1)+'区　突破！'),220);playMusic(S.cs?'_mute':'title');
+   if(stageIdx===LAST&&!S.cs){mika={kind:'npc',spr:'mika',pal:Object.assign({},BASEPAL,PALS.mika,{id:'mika'}),sc:1,x:cam+W-50,y:150,z:0,face:-1,st:'tied',t:0,T:{}};ents.push(mika)}}
   else if(S.th.suiteAt===waveI){S.enterT=1}
   else if(S.th.len>W){goT=96}else if(S.shaft){S.travelT=1;S.ev0=S.ev;shake=2;snd('door')}}
 }
@@ -1907,7 +1905,7 @@ function update(){
  if(flashT>0)flashT--;
  if(shake>0)shake=Math.max(0,shake-.3);
  if(hitstop>0){hitstop--;return}
- if(S.enterT>0)updEnter();else if(S.cs&&!S.cs.done)updCS();else updPlayer();if(mode!=='play')return;
+ if(S.enterT>0)updEnter();else if(S.cs&&!S.cs.done)updCS();else if(S.cs&&S.cs.keep)updCSKeep();else updPlayer();if(mode!=='play')return;
  for(const e of ents){if(e.kind==='enemy')updEnemy(e);else if(e.kind==='item'||e.kind==='weapon'||e.kind==='npc')e.t++}
  ents=ents.filter(e=>!e.remove);
  updFx();updCamera();updWaves();updBossCrew();updParts();updDoors();
@@ -2107,7 +2105,7 @@ function render(){
  const list=ents.filter(e=>!e.remove);if(P)list.push(P);list.sort((a,b)=>a.y-b.y);
  for(const e of list){if(e.kind==='barrel')drawBarrel(e);else if(e.kind==='item')drawItem(e);else if(e.kind==='weapon')drawWeaponItem(e);else drawEnt(e)}
  if(P&&P.st==='special')drawSpecialFx();
- drawFxAir();if(S&&S.cs&&!S.cs.done)drawCS();
+ drawFxAir();if(S&&S.cs&&(!S.cs.done||S.cs.keep))drawCS();
  drawParts();
  if(S.th.rain)drawRain();
  if(S.shaft&&S.travelT>0&&mode==='play'&&((frame>>4)&1)){for(let pass=0;pass<2;pass++){g.fillStyle=pass?'#ffd23a':'#1a0a10';for(let i=0;i<9;i++)g.fillRect(W/2-i+(pass?0:1),24+i+(pass?0:1),i*2+1,1);g.fillRect(W/2-3+(pass?0:1),33+(pass?0:1),7,8)}}
