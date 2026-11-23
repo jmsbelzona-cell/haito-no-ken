@@ -881,7 +881,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 15時10分版';
+const BUILD='11月23日 15時20分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}]))+helpHTML();
 }
@@ -1814,26 +1814,25 @@ function startCS(ge){
 }
 function csMove(a,tx,ty,sp){const dx=tx-a.x,dy=ty-a.y,d=Math.hypot(dx,dy);if(d<=sp){a.x=tx;a.y=ty;return true}a.x+=dx/d*sp;a.y+=dy/d*sp;return false}
 function updCS(){
- const c=S.cs,p=P,G=c.G,dir=c.dir;c.t++;const t=c.t;p.inv=0;p.hp=Math.max(p.hp,1);for(const a of [G,c.K])if(a&&a.flash>0)a.flash--;
+ const GT=56,HU=45/56;const c=S.cs,p=P,G=c.G,dir=c.dir;c.t++;const t=c.t;p.inv=0;p.hp=Math.max(p.hp,1);for(const a of [G,c.K])if(a&&a.flash>0)a.flash--;
  // ジンの立ち位置
  if(t<60&&!c.jd){p.face=dir;if(csMove(p,c.Jx,c.Jy,1.4)){c.jd=1;p.fr='idle0'}else p.fr='walk'+(((t/6)|0)%4)}
  // グレイブが起き上がる
  if(t===60){G.fr='crouch';snd('fall')}
  if(t===82)G.fr='idle0';
  if(t===100){G.fr='raise';c.hold=1;snd('catch')}
- if(t===124){G.fr='smash';c.hold=0;snd('swingH');const sx=G.x+G.face*14,tx=p.x+dir*6;c.gr={x0:sx,y0:G.y,x:sx,y:G.y,z:70,tx,ty:p.y,T:56,t:0}}
+ if(t===124){G.fr='smash';c.hold=0;snd('swingH');const sx=G.x+G.face*14,tx=p.x+dir*6;c.gr={x0:sx,y0:G.y,x:sx,y:G.y,z:70,tx,ty:p.y,T:GT,t:0}}
  if(t===150)G.fr='idle0';
- // 手榴弾
+ // 手榴弾（カインに当たる時刻と位置をあらかじめ決める）
  if(c.gr&&!c.gr.boom){const q=c.gr;q.t++;const u=Math.min(1,q.t/q.T);q.x=q.x0+(q.tx-q.x0)*u;q.y=q.y0+(q.ty-q.y0)*u;q.z=70*(1-u)+40*4*u*(1-u);
-  if(c.K&&c.K.leap&&Math.abs(c.K.x-q.x)<10&&q.z<c.K.z+50){q.boom=1;csBlast(q.x,q.y,q.z)}}
+  if(t===124+45){q.x=c.K.x;q.y=c.K.y;q.boom=1;csBlast(q.x,q.y,c.K.z+28)}}
  // カインが割り込む
- if(t===100){const kx=dir>0?cam-20:cam+W+20;c.K={kind:'actor',type:'rival',T:ETYPES.rival,spr:'rival',pal:makePal('rival'),sc:1,x:kx,y:p.y+2,z:0,face:dir,st:'idle',t:0,fr:'walk0',flash:0,inv:0,vz:0};ents.push(c.K);snd('jump')}
- if(c.K&&!c.K.hit){const K=c.K;K.t++;
-  if(!K.leap){K.fr='walk'+(((K.t/4)|0)%4);K.x+=dir*4.2;if(K.t%5===0)dust(K.x-dir*6,K.y);if((K.x-p.x)*dir>-30&&t>=150){K.leap=1;K.vz=2.6;K.fr='jump';snd('jump')}}
-  else{K.x+=dir*2.2;K.z+=K.vz;K.vz-=.12;if(K.z<0)K.z=0}}
+ if(t===100){const kx=dir>0?cam-20:cam+W+20,sx=G.x+G.face*14,tx=p.x+dir*6;c.Ix=sx+(tx-sx)*HU;
+  c.K={kind:'actor',type:'rival',T:ETYPES.rival,spr:'rival',pal:makePal('rival'),sc:1,x:kx,y:p.y+2,z:0,face:dir,st:'idle',t:0,fr:'walk0',flash:0,inv:0,vz:0,x0:kx};ents.push(c.K);snd('jump')}
+ if(c.K&&!c.K.hit){const K=c.K;K.t++;const take=c.Ix-dir*30;
+  if(t<155){const u=(t-100)/55;K.x=K.x0+(take-K.x0)*u;K.fr='walk'+(((K.t/4)|0)%4);if(K.t%5===0)dust(K.x-dir*6,K.y)}
+  else{const u=Math.min(1,(t-155)/14);if(t===155)snd('jump');K.x=take+(c.Ix-take)*u;K.z=Math.sin(u*Math.PI*.6)*16;K.fr='jump'}}
  if(c.K&&c.K.hit){const K=c.K;if(K.z>0||K.vz>0){K.x-=dir*1.4;K.z+=K.vz;K.vz-=.18;if(K.z<=0){K.z=0;K.vz=0;K.fr='down';snd('fall');dust(K.x,K.y);shake=4}}}
- // 手榴弾がジンに届いてしまう場合の保険
- if(c.gr&&!c.gr.boom&&c.gr.t>=c.gr.T){c.gr.boom=1;csBlast(c.gr.x,c.gr.y,0)}
  if(c.blastT){c.blastT++;if(c.blastT<20)p.fr='hurt';else if(!c.run)p.fr='idle0'}
  if(t===c.blastAt+30&&c.blastAt){G.fr='down';snd('fall');dust(G.x,G.y)}
  // ジンが駆けつける
