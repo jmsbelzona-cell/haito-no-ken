@@ -816,6 +816,8 @@ function menuAct(){const it=menuItems[menuSel];if(it){snd('decide');menuItems=[]
 const EXTEND=[50000,150000,300000];
 function resetRun(){score=0;lives=2;continues=3;nextExtend=50000;hintShown=false;grabHint=false}
 function startFull(){runMode='full';resetRun();startMovie()}
+const LASTTRY=/[?&]last/.test(location.search);
+function startLast(){runMode='full';resetRun();startStage(LAST);waveI=S.th.suiteAt;cam=S.waves[waveI-1].at;P.x=cam+100;P.y=150;ents=ents.filter(e=>e.kind!=='enemy'&&e.kind!=='barrel');lock=false;spawnQ=[];msgT=0;msgEl.classList.remove('on');S.enterT=1}
 function startSelect(i){runMode='select';resetRun();startStage(i)}
 function toSelect(sel){menuSel=typeof sel==='number'?sel:0;mode='select';hud.style.display='none';playMusic('title');showScreen('<div class="big">ステージセレクト</div>'+menuHTML(THEMES.map((th,i)=>({label:th.name,act:()=>startSelect(i)})).concat([{label:'もどる',act:toTitle}]))+'<p class="note">ステージセレクトでは、選んだ1面だけを遊べます（ハイスコアは記録されません）。<br>エンディングは「はじめから」で1〜5面を通してクリアした時だけ見られます。</p>')}
 
@@ -879,9 +881,9 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 15時05分版';
+const BUILD='11月23日 15時10分版';
 function titleHTML(){
- return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
+ return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}]))+helpHTML();
 }
 /* ===== タイトルの図解 ===== */
 const HELPIMG={};
