@@ -878,7 +878,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月22日 18時45分版';
+const BUILD='11月23日 9時30分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1054,6 +1054,8 @@ function boom(x,y,big){parts.push({t:'boom',x,y,life:22,max:22,r:big?16:10});for
 function dust(x,y){for(let i=0;i<7;i++)parts.push({t:'dust',x:x+Math.random()*18-9,y,vx:(Math.random()-.5)*.8,vy:-Math.random()*.4,life:18+(Math.random()*12|0)})}
 function popup(x,y,str){parts.push({t:'pop',x,y,str,life:50})}
 function setEnemyHud(e){lastEnemy=e;enemyHudT=150}
+function aoe(pred,dmg,dirFn,tag){let n=0;for(const o of ents){if(o.kind!=='enemy'||o.dead||isGiant(o)||(o.T&&o.T.rival)||o.type==='bike'||!vulnerable(o)||o.z>30)continue;if(tag&&tag.has(o))continue;if(!pred(o))continue;
+  if(tag)tag.add(o);o.hp-=dmg;o.flash=5;spark(o.x,o.y-36,1);if(o.hp<=0)killEnemy(o);if(P.held===o)releaseHeld();knock(o,dirFn(o),2,2.6);n++}if(n)snd('low');return n}
 function knock(e,dir,vx,vz){e.st='air';e.t=0;e.vx=dir*vx;e.vz=vz;e.face=-dir;e.bounced=0;e.token=false;e.lifted=false;e.aiming=false}
 function knockP(dir,vx,vz){const p=P;p.st='air';p.t=0;p.vx=dir*vx;p.vz=vz;p.face=-dir;p.bounced=0;dropWeapon()}
 function killEnemy(e){if(e.dead)return;e.hp=0;e.dead=true;if(S&&e.type!=='bike')S.kills=(S.kills||0)+1;score+=e.pts;popup(e.x,e.y-64*(e.sc||1),String(e.pts));if(e.deathMsg)showMsg(e.deathMsg,170);if(e.type==='knife')ents.push({kind:'weapon',type:'knife',x:e.x,y:e.y,z:0,t:0})}
@@ -1363,7 +1365,7 @@ function updGiant(e){
   go(m);
  }
 }
-function startMove(e){const p=P;
+function startMove(e){const p=P;e.aoeT=new Set();
  switch(e.move){
   case 'pound':shake=8;snd('boom');dust(e.x+e.face*30,e.y);fx.push({k:'quake',x:e.x+e.face*26,y:e.y,vx:e.face*3.2,t:0,hit:false});break;
   case 'cargo':{snd('whiff');const tx=clamp(p.x,cam+16,cam+W-16),ty=clamp(p.y,GY0,GY1);fx.push({k:'cargo',x0:e.x+e.face*6,y0:e.y,tx,ty,x:e.x,y:e.y,z:44,T:Math.round(30+Math.abs(tx-e.x)*.08),t:0});break}
@@ -1395,12 +1397,13 @@ function doMove(e){const p=P,A=e.T.atk;
     if(e.t===40){p.heldBy=null;p.esc=0;p.hp=Math.max(0,p.hp-(e.T.mini?10:16));p.flash=6;knockP(e.face,3.6,1.4);shake=8;hitstop=6;snd('heavy');endMove(e)}}
    break;
   case 'rush':e.x+=e.face*4.2;if(e.t%6===0){dust(e.x-e.face*12,e.y);shake=2}
+   aoe(o=>e.T.mech?inBox(e,o,-30,58,16):inBox(e,o,-14,34,14),e.T.mech?18:16,o=>e.face,e.aoeT||(e.aoeT=new Set()));
    if(!e.hitDone&&(e.T.mech?inBox(e,p,-30,58,16):inBox(e,p,-14,34,14))&&enemyHitsPlayer(e,e.T.mech?18:16,true))e.hitDone=true;
    if((e.face>0&&e.x>=cam+W-26)||(e.face<0&&e.x<=cam+26)){e.passes++;e.hitDone=false;e.y=clamp(e.y+(p.y-e.y)*.6,GY0,GY1);if(e.passes>=3)endMove(e);else{e.face=-e.face;snd('thud')}}
    break;
-  case 'chainsweep':if(e.t===4){if(inBox(e,p,-10,96,12))enemyHitsPlayer(e,14,true);shake=3}if(e.t>=18)endMove(e);break;
+  case 'chainsweep':if(e.t===4){aoe(o=>inBox(e,o,-10,96,12),14,o=>e.face);if(inBox(e,p,-10,96,12))enemyHitsPlayer(e,14,true);shake=3}if(e.t>=18)endMove(e);break;
   case 'press':e.x+=e.vx;e.y=clamp(e.y+e.vy,GY0,GY1);e.z+=e.vz;e.vz-=.18;
-   if(e.z<=0&&e.t>3){e.z=0;shake=9;snd('boom');dust(e.x,e.y);fx.push({k:'wave',x:e.x,y:e.y,r:6,t:0,hit:false});if(Math.hypot(p.x-e.x,(p.y-e.y)*2)<(e.T.mech?52:34)&&p.z<6)enemyHitsPlayer(e,16,true);endMove(e)}
+   if(e.z<=0&&e.t>3){e.z=0;shake=9;snd('boom');dust(e.x,e.y);fx.push({k:'wave',x:e.x,y:e.y,r:6,t:0,hit:false});aoe(o=>Math.hypot(o.x-e.x,(o.y-e.y)*2)<(e.T.mech?52:34),16,o=>o.x>=e.x?1:-1);if(Math.hypot(p.x-e.x,(p.y-e.y)*2)<(e.T.mech?52:34)&&p.z<6)enemyHitsPlayer(e,16,true);endMove(e)}
    break;
   case 'call':if(e.type==='mech'&&(e.t===10||e.t===26)){const o=spawnEnemy({k:rpick(e.t===10?['punk','chain','knife','kungfu']:['punk','chain','woman','ninja']),s:'R'});o.x=e.x+e.face*22;o.y=e.y;o.z=88;o.st='leap';o.t=0;o.vz=1.8;o.vx=e.face*1.4;o.vy=(clamp(p.y,GY0,GY1)-e.y)/40;o.face=e.face;snd('jump');for(let k=0;k<4;k++)parts.push({t:'smoke',x:o.x+(Math.random()-.5)*10,y:e.y-88-Math.random()*10,life:20})}
    if(e.t>=(e.type==='mech'?40:24))endMove(e);break;
@@ -1422,7 +1425,7 @@ function doMove(e){const p=P,A=e.T.atk;
 function updEnemy(e){
  if(e.st==='drop'){e.t++;e.vz-=.22;e.z+=e.vz;if(e.flash>0)e.flash--;if(e.z<=0){e.z=0;e.vz=0;e.st=isGiant(e)?'idle':'walk';e.t=0;dust(e.x,e.y);snd('thud');if(isGiant(e)){shake=9;snd('boom');for(let k=0;k<3;k++)dust(e.x+(k-1)*22,e.y)}}return}
  if(e.type==='bike'){updBike(e);return}
- if(isGiant(e)){const n0=fx.length;updGiant(e);if(e.T.mini)for(let i=n0;i<fx.length;i++)fx[i].mini=1;return}
+ if(isGiant(e)){const n0=fx.length;updGiant(e);for(let i=n0;i<fx.length;i++){fx[i].boss=1;if(e.T.mini)fx[i].mini=1}return}
  if(e.flash>0)e.flash--;if(e.inv>0)e.inv--;if(e.vcd>0)e.vcd--;
  const A=e.T.atk,p=P,wp=e.T.wpn;
  if(e.T.vanish&&!(e.vcd>0)&&['idle','walk'].includes(e.st)&&['punch','watk','jump','back'].includes(p.st)&&p.t===1&&Math.abs(p.x-e.x)<38&&Math.abs(p.y-e.y)<10&&Math.random()<.2){
@@ -1525,7 +1528,7 @@ function rivalStep(e){
   case 'rj':e.t++;e.x+=e.vx;e.z+=e.vz;e.vz-=.2;
    if(!e.hitDone&&inBox(e,p,-4,26,8)&&p.z<30&&enemyHitsPlayer(e,11,true))e.hitDone=true;
    if(e.z<=0&&e.t>3){e.z=0;e.st='rr';e.t=0;dust(e.x,e.y)}clampE(e);return true;
-  case 'rs':e.t++;e.inv=Math.max(e.inv,2);
+  case 'rs':e.t++;e.inv=Math.max(e.inv,2);if(e.t===1)e.aoeT=new Set();if(e.t%6===2)aoe(o=>Math.abs(o.x-e.x)<36&&Math.abs(o.y-e.y)<10,9,o=>o.x>=e.x?1:-1,e.aoeT);
    if(e.t%6===2&&!e.hitDone&&Math.abs(p.x-e.x)<36&&Math.abs(p.y-e.y)<10&&p.z<30){if(enemyHitsPlayer({face:p.x>=e.x?1:-1},9,true))e.hitDone=true}
    if(e.t>=30){e.st='rr';e.t=0;e.inv=10}return true;
   case 'rb':{e.t++;const d=e.fast?8:12;e.x-=e.face*(e.fast?4.2:2.6);e.z=Math.max(0,Math.sin(e.t/d*Math.PI)*6);if(e.t>=d){e.z=0;e.st='idle';e.t=0;e.cool=e.fast?4:12;e.fast=0}clampE(e);return true}
@@ -1699,19 +1702,21 @@ function updEnter(){
 /* ===== 飛び道具 ===== */
 function updFx(){
  for(const f of fx){f.t++;
-  if(f.k==='wave'){f.r+=2.6;if(f.r>0){const d=Math.hypot(P.x-f.x,(P.y-f.y)*2.5);if(!f.hit&&P.z<3&&Math.abs(d-f.r)<5){if(enemyHitsPlayer({mini:f.mini,face:P.x>=f.x?1:-1},12,true))f.hit=true}}if(f.r>175)f.dead=true}
-  else if(f.k==='bullet'){f.x+=f.vx;f.y+=f.vy||0;if(f.y<GY0-12||f.y>GY1+12)f.dead=true;if(Math.abs(P.x-f.x)<6&&Math.abs(P.y-f.y)<6&&P.z<14){if(enemyHitsPlayer({mini:f.mini,face:Math.sign(f.vx)},f.dmg||10,!!f.kd)){f.dead=true}}if(f.x<cam-20||f.x>cam+W+20)f.dead=true}
+  if(f.k==='wave'){f.r+=2.6;if(f.r>0){aoe(o=>Math.abs(Math.hypot(o.x-f.x,(o.y-f.y)*2.5)-f.r)<5,12,o=>o.x>=f.x?1:-1,f.tag||(f.tag=new Set()));const d=Math.hypot(P.x-f.x,(P.y-f.y)*2.5);if(!f.hit&&P.z<3&&Math.abs(d-f.r)<5){if(enemyHitsPlayer({mini:f.mini,face:P.x>=f.x?1:-1},12,true))f.hit=true}}if(f.r>175)f.dead=true}
+  else if(f.k==='bullet'){f.x+=f.vx;f.y+=f.vy||0;if(f.y<GY0-12||f.y>GY1+12)f.dead=true;if(f.boss&&!f.dead&&aoe(o=>Math.abs(o.x-f.x)<6&&Math.abs(o.y-f.y)<6,f.dmg||10,o=>Math.sign(f.vx)||1))f.dead=true;if(Math.abs(P.x-f.x)<6&&Math.abs(P.y-f.y)<6&&P.z<14){if(enemyHitsPlayer({mini:f.mini,face:Math.sign(f.vx)},f.dmg||10,!!f.kd)){f.dead=true}}if(f.x<cam-20||f.x>cam+W+20)f.dead=true}
   else if(f.k==='shuriken'){f.x+=f.vx;if(Math.abs(P.x-f.x)<6&&Math.abs(P.y-f.y)<6&&P.z<14){if(enemyHitsPlayer({mini:f.mini,face:Math.sign(f.vx)},7,false))f.dead=true}if(f.x<cam-20||f.x>cam+W+20)f.dead=true}
-  else if(f.k==='quake'){f.x+=f.vx;if(f.t%3===0){for(let i=0;i<3;i++)parts.push({t:'deb',x:f.x+(Math.random()-.5)*8,y:f.y,z:2,vx:(Math.random()-.5)*1.2,vz:1.5+Math.random()*2.5,col:rpick(['#6a5a4a','#8a7a6a','#4a3a2a']),life:30});shake=Math.max(shake,2)}
+  else if(f.k==='quake'){f.x+=f.vx;aoe(o=>Math.abs(o.x-f.x)<10&&Math.abs(o.y-f.y)<9,14,o=>Math.sign(f.vx)||1,f.tag||(f.tag=new Set()));if(f.t%3===0){for(let i=0;i<3;i++)parts.push({t:'deb',x:f.x+(Math.random()-.5)*8,y:f.y,z:2,vx:(Math.random()-.5)*1.2,vz:1.5+Math.random()*2.5,col:rpick(['#6a5a4a','#8a7a6a','#4a3a2a']),life:30});shake=Math.max(shake,2)}
    if(!f.hit&&Math.abs(P.x-f.x)<10&&Math.abs(P.y-f.y)<9&&P.z<5){if(enemyHitsPlayer({mini:f.mini,face:Math.sign(f.vx)},14,true))f.hit=true}if(f.x<cam-20||f.x>cam+W+20)f.dead=true}
-  else if(f.k==='drum'){f.x+=f.vx;if(!f.hit&&Math.abs(P.x-f.x)<10&&Math.abs(P.y-f.y)<7&&P.z<10){if(enemyHitsPlayer({mini:f.mini,face:Math.sign(f.vx)},12,true))f.hit=true}if(f.x<cam-30||f.x>cam+W+30)f.dead=true}
+  else if(f.k==='drum'){f.x+=f.vx;if(f.boss)aoe(o=>Math.abs(o.x-f.x)<10&&Math.abs(o.y-f.y)<7,12,o=>Math.sign(f.vx)||1,f.tag||(f.tag=new Set()));if(!f.hit&&Math.abs(P.x-f.x)<10&&Math.abs(P.y-f.y)<7&&P.z<10){if(enemyHitsPlayer({mini:f.mini,face:Math.sign(f.vx)},12,true))f.hit=true}if(f.x<cam-30||f.x>cam+W+30)f.dead=true}
   else if(f.k==='marker'){if(f.t>=f.T)f.dead=true}
   else if(f.k==='cargo'){const u=Math.min(1,f.t/f.T);f.x=f.x0+(f.tx-f.x0)*u;f.y=f.y0+(f.ty-f.y0)*u;f.z=36*(1-u)+34*4*u*(1-u);
+   if(u<1&&f.z<52&&aoe(o=>Math.abs(o.x-f.x)<12&&Math.abs(o.y-f.y)<9,14,o=>o.x>=f.x?1:-1)){f.t=f.T;f.tx=f.x;f.ty=f.y;f.x0=f.x;f.y0=f.y;f.z=0;f.hit=true}
    if(u<1&&!f.hit&&Math.abs(P.x-f.x)<12&&Math.abs(P.y-f.y)<9&&f.z<P.z+52&&f.z+16>P.z){if(enemyHitsPlayer({mini:f.mini,face:P.x>=f.x?1:-1},14,true)){f.hit=true;f.t=f.T;f.tx=f.x;f.ty=f.y;f.x0=f.x;f.y0=f.y;f.z=0}}
    if(u>=1||f.hit){f.dead=true;snd('drumS');snd('thud');shake=Math.max(shake,5);dust(f.x,f.y);for(let i=0;i<14;i++)parts.push({t:'deb',x:f.x,y:f.y,z:4,vx:(Math.random()-.5)*3.4,vz:1+Math.random()*3,col:rpick(['#8a6a3a','#a8844a','#5a4220','#d8c8a0']),life:50});
+    aoe(o=>Math.abs(o.x-f.x)<15&&Math.abs(o.y-f.y)<9,14,o=>o.x>=f.x?1:-1);
     if(!f.hit&&Math.abs(P.x-f.x)<15&&Math.abs(P.y-f.y)<9&&P.z<12)enemyHitsPlayer({mini:f.mini,face:P.x>=f.x?1:-1},14,true)}}
-  else if(f.k==='missile'){if(f.ph===0){f.z+=5;if(f.t>=22){f.ph=1;f.x=f.tx;f.y=f.ty;f.z=170;f.t=0}}else{f.z-=4.5;if(f.z<=0){f.dead=true;boom(f.x,f.y-6,true);snd('boom');shake=Math.max(shake,5);if(Math.hypot(P.x-f.x,(P.y-f.y)*2)<22&&P.z<10)enemyHitsPlayer({mini:f.mini,face:P.x>=f.x?1:-1},12,true)}}}
-  else if(f.k==='hmis'){f.x+=f.vx;if(f.z>30)f.z=Math.max(30,f.z-2.4);f.y+=clamp(P.y-f.y,-.35,.35);if(f.t%3===0)parts.push({t:'smoke',x:f.x-Math.sign(f.vx)*6,y:f.y-f.z,life:12});
+  else if(f.k==='missile'){if(f.ph===0){f.z+=5;if(f.t>=22){f.ph=1;f.x=f.tx;f.y=f.ty;f.z=170;f.t=0}}else{f.z-=4.5;if(f.z<=0){f.dead=true;boom(f.x,f.y-6,true);snd('boom');shake=Math.max(shake,5);aoe(o=>Math.hypot(o.x-f.x,(o.y-f.y)*2)<22,12,o=>o.x>=f.x?1:-1);if(Math.hypot(P.x-f.x,(P.y-f.y)*2)<22&&P.z<10)enemyHitsPlayer({mini:f.mini,face:P.x>=f.x?1:-1},12,true)}}}
+  else if(f.k==='hmis'){f.x+=f.vx;if(aoe(o=>Math.abs(o.x-f.x)<9&&Math.abs(o.y-f.y)<7&&f.z<o.z+52,12,o=>Math.sign(f.vx)||1)){f.dead=true;boom(f.x,f.y-f.z+6,false);snd('boom');continue}if(f.z>30)f.z=Math.max(30,f.z-2.4);f.y+=clamp(P.y-f.y,-.35,.35);if(f.t%3===0)parts.push({t:'smoke',x:f.x-Math.sign(f.vx)*6,y:f.y-f.z,life:12});
    if(Math.abs(P.x-f.x)<9&&Math.abs(P.y-f.y)<7&&Math.abs(P.z+28-f.z)<24){f.dead=true;boom(f.x,f.y-f.z+6,false);snd('boom');enemyHitsPlayer({mini:f.mini,face:Math.sign(f.vx)},12,true)}
    if(f.x<cam-30||f.x>cam+W+30||f.t>260)f.dead=true}
   else if(f.k==='hook'){const e=f.owner;if(!e||e.dead||e.st!=='atk'||e.move!=='hook'){f.dead=true;continue}
