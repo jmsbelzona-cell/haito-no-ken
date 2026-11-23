@@ -879,7 +879,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 11時00分版';
+const BUILD='11月23日 14時20分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1831,7 +1831,7 @@ pauseBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play'&&!paused)togglePause()});
 const CREWK=['punk','chain','knife','gun','kungfu','ninja','woman'];
 function updBossCrew(){
- const B=ents.find(e=>e.kind==='enemy'&&isBoss(e)&&!e.dead&&e.st!=='drop');if(!B||clearT>0){return}
+ const B=ents.find(e=>e.kind==='enemy'&&isBoss(e)&&!e.dead&&e.st!=='drop');if(!B||clearT>0||B.T.rival||B.type==='grave'){return}
  const n=ents.filter(o=>o.kind==='enemy'&&!o.dead&&!isBoss(o)&&o.type!=='bike'&&!(o.T&&o.T.giant)).length;
  if(!S.crewGoal||n>=S.crewGoal){if(n>=2)S.crewGoal=0;S.crewT=0;if(n>=2)return}
  if(!S.crewGoal)S.crewGoal=2+(Math.random()<.5?1:0);
