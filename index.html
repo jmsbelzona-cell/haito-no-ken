@@ -879,7 +879,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月23日 9時50分版';
+const BUILD='11月23日 10時00分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML([{label:'はじめから',act:startFull},{label:'ステージセレクト',act:toSelect}])+helpHTML();
 }
@@ -1314,7 +1314,7 @@ function updBike(e){
  e.t++;e.x+=e.vx;
  if(e.t%3===0)parts.push({t:'smoke',x:e.x-e.face*16,y:e.y-6,life:20});
  if(!e.hitDone&&Math.abs(P.x-e.x)<15&&Math.abs(P.y-e.y)<6&&P.z<14){if(enemyHitsPlayer(e,12,true))e.hitDone=true}
- if((e.vx>0&&e.x>cam+W+60)||(e.vx<0&&e.x<cam-60))e.remove=true;
+ if((e.vx>0&&e.x>cam+W+60)||(e.vx<0&&e.x<cam-60)){e.vx=-e.vx;e.face=-e.face;e.hitDone=false;e.y=clamp(P.y+(Math.random()-.5)*10,GY0,GY1);snd('moto')}
 }
 const GWIND={pound:34,grab:16,drum:22,rush:26,chainsweep:22,press:18,call:24,mg:28,burst:14,retreat:8,swing:28,hook:24,missile:30,cargo:30,hmissile:26};
 function updGiant(e){
