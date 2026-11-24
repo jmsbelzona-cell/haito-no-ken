@@ -131,6 +131,7 @@ PALS.gang={skin:'#c88a60',hair:'#1a1a1a',accent:'#c8302a',jacket:'#3a5a8a',shirt
 PALS.mafia={skin:'#e8b48a',hair:'#1a1a1a',extra:'#2a2a2e',accent:'#c8302a',jacket:'#2a2a32',shirt:'#e8e0d0',pants:'#2a2a32',metal:'#101014',shoe:'#101010'};
 PALS.kungfu={skin:'#f0c49a',hair:'#141418',jacket:'#c8302a',accent:'#e8c24a',pants:'#1a1a1e',shoe:'#1a1a1e'};
 PALS.ninja={skin:'#e8b890',extra:'#1a1a22',jacket:'#1a1a22',accent:'#c8302a',pants:'#1a1a22',shoe:'#1a1a22',belt:'#c8302a'};
+PALS.cyborg={skin:'#a8b0bc',hair:'#5a6270',eye:'#ff2020',white:'#ff7060',accent:'#30c0ff',shirt:'#2a2e38',jacket:'#2a2e38',pants:'#4a5260',shoe:'#1a1c22',glove:'#6a7280',belt:'#30c0ff',buckle:'#e8f4ff',mouth:'#3a3e48'};
 PALS.guard={skin:'#c8885e',shirt:'#2a6ab0',glove:'#2a4ac8',pants:'#2a2a36',shoe:'#1a1a1a'};
 PALS.bomber={skin:'#e0a070',hair:'#2a1a10',accent:'#e86a20',jacket:'#5a4a2a',shirt:'#e8e0c8',pants:'#4a5a3a',shoe:'#2a1a10',metal:'#c0c8d0'};
 PALS.woman={skin:'#f2c4a0',hair:'#8a2a1a',accent:'#d02a4a',jacket:'#2a2a2e',shirt:'#c8302a',pants:'#2a2a36',shoe:'#1a1a1a'};
@@ -896,7 +897,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月24日 18時00分版';
+const BUILD='11月24日 18時10分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:'はじめから',act:startFull}],kainOpen?[{label:'カインで遊ぶ',act:startKain}]:[],[{label:'ステージセレクト',act:toSelect}]))+helpHTML();
 }
@@ -1332,7 +1333,7 @@ function spawnEnemy(o){
  ents.push(e);
  if(o.msg)showMsg(o.msg,170);
  if(T.giant&&!T.mini){playMusic(BOSSMUS[o.k]||'boss');setEnemyHud(e)}
- if(T.rival){if(KAIN){e.spr='hero';e.pal=HEROPAL;e.name='ジン'}playMusic('rival');setEnemyHud(e);e.hits=0;e.vcd=0}
+ if(T.rival){if(KAIN){e.pal=makePal('cyborg');e.name='サイボーグカイン';e.cyborg=1}playMusic('rival');setEnemyHud(e);e.hits=0;e.vcd=0}
  return e;
 }
 function clampE(e){e.y=clamp(e.y,GY0,GY1);e.x=clamp(e.x,cam-40,cam+W+40)}
@@ -2101,6 +2102,7 @@ function drawEnt(e){
  const sr=Math.max(4,Math.round(10*sc*(e.spr==='brute'||e.spr==='sumo'?1.35:1)-e.z*.1));
  g.globalAlpha=.35;pellipse(g,sx,e.st==='perch'?gy-Math.round(e.z):gy,sr,Math.max(2,Math.round(sr/6)),'#000000');g.globalAlpha=1;
  if(e.type==='bike'){drawBikeAt(sx,gy,e.face,false)}
+ if(e.cyborg&&!e.dead&&frame%23===(e.t%5)){parts.push({t:'spark',x:e.x+(Math.random()-.5)*14,y:e.y-20-Math.random()*30,life:5,max:5,big:false})}
  if(e.inv>0&&e.st!=='special'&&e.st!=='getup'&&(frame&2))return;
  if(e.st==='dying'&&(isGiant(e)?e.t>100:true)&&(frame&2))return;
  if(e.T&&e.T.mech){if(!mechCv){mechCv=mk(240,196);mechCtx=mechCv.getContext('2d')}const G0=g;g=mechCtx;g.clearRect(0,0,240,196);g.save();g.translate(120,186);drawMech(e);g.restore();g=G0;
