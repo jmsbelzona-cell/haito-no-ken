@@ -897,9 +897,9 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月24日 20時00分版';
+const BUILD='11月24日 20時05分版';
 function titleHTML(){
- return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:kainOpen?'はじめから（ジン・力型）':'はじめから',act:startFull}],kainOpen?[{label:'カインで遊ぶ（速さ型）',act:startKain}]:[],[{label:'ステージセレクト',act:toSelect}]))+helpHTML();
+ return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:'はじめから',act:startFull}],kainOpen?[{label:'カインでプレイ',act:startKain}]:[],[{label:'ステージセレクト',act:toSelect}]))+helpHTML();
 }
 /* ===== タイトルの図解 ===== */
 const HELPIMG={};
