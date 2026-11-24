@@ -897,7 +897,7 @@ function endingImg(){
  x.fillStyle='#1a1028';[[60,30],[70,26],[262,40],[250,48],[274,52]].forEach(([a,b])=>{x.fillRect(a,b,2,1);x.fillRect(a+2,b+1,1,1);x.fillRect(a+3,b,2,1)});
  return c.toDataURL();
 }
-const BUILD='11月24日 18時10分版';
+const BUILD='11月24日 18時20分版';
 function titleHTML(){
  return '<div style="position:absolute;right:.6em;top:.4em;font-size:.6em;color:#8a80a0">'+BUILD+'</div><div class="title">廃都の拳</div><div class="sub">さらわれたミカを救い出せ</div>'+(hiScore?'<div style="color:#c8c0e0;margin-bottom:.3em">ハイスコア '+hiScore+'</div>':'')+menuHTML((LASTTRY?[{label:'ラストバトル（試遊）',act:startLast}]:[]).concat([{label:'はじめから',act:startFull}],kainOpen?[{label:'カインで遊ぶ',act:startKain}]:[],[{label:'ステージセレクト',act:toSelect}]))+helpHTML();
 }
@@ -1111,7 +1111,7 @@ function hurtEnemy(e,dmg,kind,dir,kb){
  if(e.T.rival){e.hits=(e.hits||0)+1;e.hitT=120}
  e.hp-=dmg;e.flash=5;score+=dmg*10;setEnemyHud(e);e.token=false;e.cool=Math.max(e.cool,30);e.dash=false;e.glow=0;e.aiming=false;
  const heavy=kind==='heavy'||e.hp<=0||e.z>2,s=e.sc||1;
- spark(e.x-dir*4,e.y-36*s,heavy);hitstop=heavy?6:3;shake=heavy?4:2;snd(hitSndOf(heavy));
+ spark(e.x-dir*4,e.y-36*s,heavy);hitstop=heavy?6:3;shake=heavy?4:2;snd(e.cyborg?'clang':hitSndOf(heavy));
  if(e.hp<=0){killEnemy(e);knock(e,dir,2,2.8);if(e.T.rival){hitstop=20;flashT=5;for(const o of ents)if(o!==e&&o.kind==='enemy'&&!o.dead&&!isGiant(o)){killEnemy(o);knock(o,o.x>=e.x?1:-1,2,2.8)}}return}
  if(heavy){knock(e,dir,1.6,2.4);return}
  e.st='hurt';e.t=0;e.vx=dir*kb;e.face=-dir;e.stun=kind==='kick'?20:15;
@@ -1460,6 +1460,7 @@ function updEnemy(e){
  if(e.st==='drop'){e.t++;e.vz-=.22;e.z+=e.vz;if(e.flash>0)e.flash--;if(e.z<=0){e.z=0;e.vz=0;e.st=isGiant(e)?'idle':'walk';e.t=0;dust(e.x,e.y);snd('thud');if(isGiant(e)){shake=9;snd('boom');for(let k=0;k<3;k++)dust(e.x+(k-1)*22,e.y)}}return}
  if(e.type==='bike'){updBike(e);return}
  if(isGiant(e)){const n0=fx.length;AOEMINI=!!e.T.mini;updGiant(e);AOEMINI=false;for(let i=n0;i<fx.length;i++){fx[i].boss=1;if(e.T.mini)fx[i].mini=1}return}
+ if(e.cyborg&&e.dead){e.bt=(e.bt||0)+1;if(e.bt%7===0&&e.bt<60){boom(e.x+(Math.random()-.5)*20,e.y-10-Math.random()*36,false);snd('boom');shake=Math.max(shake,3)}if(e.bt===66){boom(e.x,e.y-20,true);boom(e.x-12,e.y-8,true);boom(e.x+12,e.y-30,true);snd('boom');shake=10;flashT=6;for(let i=0;i<16;i++)parts.push({t:'deb',x:e.x,y:e.y,z:20,vx:(Math.random()-.5)*5,vz:1.5+Math.random()*3,col:rpick(['#a8b0bc','#5a6270','#30c0ff','#2a2e38']),life:60});e.remove=true;return}}
  if(e.flash>0)e.flash--;if(e.inv>0)e.inv--;if(e.vcd>0)e.vcd--;if(e.guardT>0)e.guardT--;
  const A=e.T.atk,p=P,wp=e.T.wpn;
  if(e.T.vanish&&!(e.vcd>0)&&['idle','walk'].includes(e.st)&&Math.abs(p.y-e.y)<10&&((['punch','watk','back'].includes(p.st)&&p.t===1&&Math.abs(p.x-e.x)<38&&Math.random()<.2)||(p.st==='jump'&&p.jatk&&p.jt===1&&Math.abs(p.x-e.x)<52&&Math.random()<.6))){
